@@ -30,7 +30,10 @@ import (
 )
 
 func main() {
-	c, err := vault.NewClient("https://vault:8200/", vault.WithCaPath(""), vault.WithAuthToken("SECRET"))
+	c, err := vault.NewClient("https://vault:8200/", 
+        vault.WithCaPath(""),
+        vault.WithAuthToken("SECRET"),
+    )
 	if err != nil {
 		log.Fatal(err)
     }
