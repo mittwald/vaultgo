@@ -13,10 +13,10 @@ func (c *Client) Transit() *Transit {
 	return c.TransitWithMountPoint("transit")
 }
 
-func (c *Client) TransitWithMountPoint(mountpoint string) *Transit {
+func (c *Client) TransitWithMountPoint(mountPoint string) *Transit {
 	return &Transit{
 		Client:     c,
-		MountPoint: mountpoint,
+		MountPoint: mountPoint,
 	}
 }
 
