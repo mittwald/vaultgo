@@ -2,32 +2,33 @@ package main
 
 import (
 	"fmt"
-	hcvault "github.com/hashicorp/vault/api"
 	vault "gitlab.mittwald.it/coab-0x7e7/libraries/vaultgo/pkg/vault"
 	"gopkg.in/guregu/null.v3"
+	"log"
 )
 
 func main() {
-	key := "test123bacd";
-	conf := hcvault.DefaultConfig()
-	conf.Address = "http://localhost:8200/"
+	c, err := vault.NewClient("https://vault:8200/", vault.WithCaPath(""), vault.WithAuthToken("test"))
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	c, _ := vault.NewClient(conf)
-
-	c.SetToken("test")
+	fmt.Println(c.Token())
 
 	transit := c.Transit()
 
-	err := transit.Create(key, vault.TransitCreateOptions{
+	key := "test123bacd"
+
+	err = transit.Create(key, vault.TransitCreateOptions{
 		Exportable: null.BoolFrom(true),
 	})
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal(err)
 	}
 
 	res, err := transit.Read(key)
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal(err)
 	} else {
 		fmt.Printf("%+v\n", res.Data)
 	}
@@ -36,7 +37,7 @@ func main() {
 		KeyType: "encryption-key",
 	})
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal(err)
 	}
 	fmt.Printf("%v+", exportRes.Data.Keys[1])
 }
