@@ -1,7 +1,10 @@
 package vault
 
 import (
+	"encoding/base64"
+	"github.com/hashicorp/vault/api"
 	"gopkg.in/guregu/null.v3"
+	"net/http"
 )
 
 type Transit struct {
@@ -27,8 +30,8 @@ type TransitCreateOptions struct {
 	AllowPlaintextBackup null.Bool `json:"allow_plaintext_backup,omitempty"`
 }
 
-func (t *Transit) Create(key string, data TransitCreateOptions) error {
-	err := t.Client.Write([]string{"v1", t.MountPoint, "keys", key}, data, nil)
+func (t *Transit) Create(key string, opts TransitCreateOptions) error {
+	err := t.Client.Write([]string{"v1", t.MountPoint, "keys", key}, opts, nil)
 	if err != nil {
 		return err
 	}
@@ -87,7 +90,7 @@ func (t *Transit) Delete(key string) error {
 }
 
 func (t *Transit) ForceDelete(key string) error {
-	err := t.Update(key, &TransitUpdateOptions{
+	err := t.Update(key, TransitUpdateOptions{
 		DeletionAllowed: null.BoolFrom(true),
 	})
 	if err != nil {
@@ -109,8 +112,8 @@ type TransitUpdateOptions struct {
 	AllowPlaintextBackup null.Bool `json:"allow_plaintext_backup"`
 }
 
-func (t *Transit) Update(key string, options *TransitUpdateOptions) error {
-	err := t.Client.Write([]string{"v1", t.MountPoint, "keys", key, "config"}, options, nil)
+func (t *Transit) Update(key string, opts TransitUpdateOptions) error {
+	err := t.Client.Write([]string{"v1", t.MountPoint, "keys", key, "config"}, opts, nil)
 	if err != nil {
 		return err
 	}
@@ -138,11 +141,11 @@ type TransitExportResponse struct {
 	} `json:"data"`
 }
 
-func (t *Transit) Export(key string, options *TransitExportOptions) (*TransitExportResponse, error) {
+func (t *Transit) Export(key string, opts TransitExportOptions) (*TransitExportResponse, error) {
 	res := &TransitExportResponse{}
-	path := []string{"v1", t.MountPoint, "export", options.KeyType, key}
-	if options.Version != "" {
-		path = append(path, options.Version)
+	path := []string{"v1", t.MountPoint, "export", opts.KeyType, key}
+	if opts.Version != "" {
+		path = append(path, opts.Version)
 	}
 	err := t.Client.Read(path, nil, res)
 	if err != nil {
@@ -189,9 +192,10 @@ type TransitEncryptResponse struct {
 	} `json:"data"`
 }
 
-func (t *Transit) Encrypt(key string, options *TransitEncryptOptions) (*TransitEncryptResponse, error) {
+func (t *Transit) Encrypt(key string, opts TransitEncryptOptions) (*TransitEncryptResponse, error) {
 	res := &TransitEncryptResponse{}
-	err := t.Client.Write([]string{"v1", t.MountPoint, "encrypt", key}, options, res)
+	opts.Plaintext = base64.StdEncoding.EncodeToString([]byte(opts.Plaintext))
+	err := t.Client.Write([]string{"v1", t.MountPoint, "encrypt", key}, opts, res)
 	if err != nil {
 		return nil, err
 	}
@@ -211,9 +215,12 @@ type TransitEncryptResponseBatch struct {
 	} `json:"data"`
 }
 
-func (t *Transit) EncryptBatch(key string, options *TransitEncryptOptionsBatch) (*TransitEncryptResponseBatch, error) {
+func (t *Transit) EncryptBatch(key string, opts TransitEncryptOptionsBatch) (*TransitEncryptResponseBatch, error) {
 	res := &TransitEncryptResponseBatch{}
-	err := t.Client.Write([]string{"v1", t.MountPoint, "encrypt", key}, options, res)
+	for i := range opts.BatchInput{
+		opts.BatchInput[i].Plaintext =  base64.StdEncoding.EncodeToString([]byte(opts.BatchInput[i].Plaintext ))
+	}
+	err := t.Client.Write([]string{"v1", t.MountPoint, "encrypt", key}, opts, res)
 	if err != nil {
 		return nil, err
 	}
@@ -232,12 +239,17 @@ type TransitDecrpytResponse struct {
 	} `json:"data"`
 }
 
-func (t *Transit) Decrpyt(key string, options *TransitDecryptOptions) (*TransitDecrpytResponse, error) {
+func (t *Transit) Decrypt(key string, opts TransitDecryptOptions) (*TransitDecrpytResponse, error) {
 	res := &TransitDecrpytResponse{}
-	err := t.Client.Write([]string{"v1", t.MountPoint, "decrypt", key}, options, res)
+	err := t.Client.Write([]string{"v1", t.MountPoint, "decrypt", key}, opts, res)
 	if err != nil {
+		return nil, t.mapError(err)
+	}
+	blob, err := base64.StdEncoding.DecodeString(res.Data.Plaintext)
+	if err != nil{
 		return nil, err
 	}
+	res.Data.Plaintext = string(blob)
 	return res, nil
 }
 
@@ -251,11 +263,31 @@ type TransitDecrpytResponseBatch struct {
 	} `json:"data"`
 }
 
-func (t *Transit) DecrpytBatch(key string, options *TransitDecryptOptionsBatch) (*TransitDecrpytResponseBatch, error) {
+func (t *Transit) DecryptBatch(key string, opts TransitDecryptOptionsBatch) (*TransitDecrpytResponseBatch, error) {
 	res := &TransitDecrpytResponseBatch{}
-	err := t.Client.Write([]string{"v1", t.MountPoint, "decrypt", key}, options, res)
+	err := t.Client.Write([]string{"v1", t.MountPoint, "decrypt", key}, opts, res)
 	if err != nil {
 		return nil, err
 	}
+	for i := range res.Data.BatchResults{
+		blob, err := base64.StdEncoding.DecodeString(res.Data.BatchResults[i].Plaintext)
+		if err != nil{
+			return nil, err
+		}
+		res.Data.BatchResults[i].Plaintext = string(blob)
+	}
+
 	return res, nil
+}
+
+func (t *Transit) mapError(err error) error{
+	if resErr, ok := err.(*api.ResponseError); ok{
+		if resErr.StatusCode == http.StatusBadRequest{
+			if len(resErr.Errors) == 1 && resErr.Errors[0] == "encryption key not found"{
+				return ErrEncKeyNotFound
+			}
+		}
+	}
+
+	return err
 }

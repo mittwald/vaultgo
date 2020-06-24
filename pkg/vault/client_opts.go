@@ -1,7 +1,5 @@
 package vault
 
-import hcvault "github.com/hashicorp/vault/api"
-
 type ClientOpts func(c *Client) error
 
 func WithAuthProvider(p AuthProvider, autoRenew bool, renewErrs chan<- error) ClientOpts {

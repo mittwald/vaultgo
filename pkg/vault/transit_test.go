@@ -1,7 +1,9 @@
 package vault
 
 import (
+	"fmt"
 	"testing"
+	"time"
 
 	hcvault "github.com/hashicorp/vault/api"
 	"github.com/stretchr/testify/suite"
@@ -14,10 +16,7 @@ type TransitTestSuite struct {
 }
 
 func TestTransitTestSuite(t *testing.T) {
-	conf := hcvault.DefaultConfig()
-	conf.Address = "http://localhost:8200/"
-
-	client, _ := NewClient(conf)
+	client, _ := NewClient("http://localhost:8200/", WithCaPath(""))
 	client.SetToken("test")
 	transit := client.Transit()
 
@@ -45,6 +44,8 @@ func (s *TransitTestSuite) TestCreateAndList() {
 	})
 	s.NoError(err)
 
+	time.Sleep(time.Millisecond * 10)
+
 	res, err := s.client.List()
 	s.NoError(err)
 
@@ -63,7 +64,7 @@ func (s *TransitTestSuite) TestCreateListAllowDelete() {
 	s.NoError(err)
 	s.Contains(res.Data.Keys, key)
 
-	err = s.client.Update(key, &TransitUpdateOptions{
+	err = s.client.Update(key, TransitUpdateOptions{
 		DeletionAllowed: null.BoolFrom(true),
 	})
 	s.NoError(err)
@@ -120,7 +121,7 @@ func (s *TransitTestSuite) TestExport() {
 	})
 	s.NoError(err)
 
-	res, err := s.client.Export(key, &TransitExportOptions{
+	res, err := s.client.Export(key, TransitExportOptions{
 		KeyType: "encryption-key",
 	})
 	s.NoError(err)
@@ -149,45 +150,75 @@ func (s *TransitTestSuite) TestEncryptDecrypt() {
 	err := s.client.Create("testEncryptDecrypt", TransitCreateOptions{})
 	s.NoError(err)
 
-	textb64 := "dGVzdA=="
+	text := "test"
 
-	enc, err := s.client.Encrypt("testEncryptDecrypt", &TransitEncryptOptions{
-		Plaintext: textb64,
+	enc, err := s.client.Encrypt("testEncryptDecrypt", TransitEncryptOptions{
+		Plaintext: text,
 	})
 	s.NoError(err)
 
-	dec, err := s.client.Decrpyt("testEncryptDecrypt", &TransitDecryptOptions{
+	dec, err := s.client.Decrypt("testEncryptDecrypt", TransitDecryptOptions{
 		Ciphertext: enc.Data.Ciphertext,
 	})
 	s.NoError(err)
 
-	s.Equal(textb64, dec.Data.Plaintext)
+	s.Equal(text, dec.Data.Plaintext)
 }
 
 func (s *TransitTestSuite) TestEncryptDecryptBatch() {
 	err := s.client.Create("testEncryptDecryptBatch", TransitCreateOptions{})
 	s.NoError(err)
 
-	text1b64 := "dGVzdA=="
-	text2b64 := "Zm9v"
+	text1 := "test1"
+	text2 := "test2"
 
-	enc, err := s.client.EncryptBatch("testEncryptDecryptBatch", &TransitEncryptOptionsBatch{
+	enc, err := s.client.EncryptBatch("testEncryptDecryptBatch", TransitEncryptOptionsBatch{
 		BatchInput: []TransitBatchPlaintext{
 			{
-				Plaintext: text1b64,
+				Plaintext: text1,
 			},
 			{
-				Plaintext: text2b64,
+				Plaintext: text2,
 			},
 		},
 	})
 	s.NoError(err)
 
-	dec, err := s.client.DecrpytBatch("testEncryptDecryptBatch", &TransitDecryptOptionsBatch{
+	dec, err := s.client.DecryptBatch("testEncryptDecryptBatch", TransitDecryptOptionsBatch{
 		BatchInput: enc.Data.BatchResults,
 	})
 	s.NoError(err)
 
-	s.Equal(text1b64, dec.Data.BatchResults[0].Plaintext)
-	s.Equal(text2b64, dec.Data.BatchResults[1].Plaintext)
+	s.Equal(text1, dec.Data.BatchResults[0].Plaintext)
+	s.Equal(text2, dec.Data.BatchResults[1].Plaintext)
+}
+
+func (s *TransitTestSuite) TestDecryptWithoutKey() {
+	_, err := s.client.Decrypt("test404", TransitDecryptOptions{
+		Ciphertext: "asdf",
+	})
+	s.Equal(ErrEncKeyNotFound, err)
+}
+
+func (s *TransitTestSuite) TestDecryptWithBadCipher() {
+	err := s.client.Create("j7456gsegtfae", TransitCreateOptions{})
+	s.NoError(err)
+
+	_, err = s.client.Decrypt("j7456gsegtfae", TransitDecryptOptions{
+		Ciphertext: "nociphertext",
+	})
+	resErr, ok := err.(*hcvault.ResponseError)
+	if ok {
+		fmt.Println(resErr)
+		s.Equal(resErr.StatusCode, 400)
+	} else {
+		s.Fail("unexpected error type")
+	}
+}
+
+func (s *TransitTestSuite) TestCeateKeyThatDoesAlreadyExist() {
+	err := s.client.Create("testCeateKeyThatDoesAlreadyExist", TransitCreateOptions{})
+	s.NoError(err)
+	err = s.client.Create("testCeateKeyThatDoesAlreadyExist", TransitCreateOptions{})
+	s.NoError(err)
 }

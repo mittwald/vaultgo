@@ -33,7 +33,7 @@ func main() {
 		fmt.Printf("%+v\n", res.Data)
 	}
 
-	exportRes, err := transit.Export(key, &vault.TransitExportOptions{
+	exportRes, err := transit.Export(key, vault.TransitExportOptions{
 		KeyType: "encryption-key",
 	})
 	if err != nil {
