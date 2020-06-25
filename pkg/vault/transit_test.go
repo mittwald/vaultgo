@@ -216,7 +216,7 @@ func (s *TransitTestSuite) TestDecryptWithBadCipher() {
 	}
 }
 
-func (s *TransitTestSuite) TestCeateKeyThatDoesAlreadyExist() {
+func (s *TransitTestSuite) TestCreateKeyThatDoesAlreadyExist() {
 	err := s.client.Create("testCeateKeyThatDoesAlreadyExist", TransitCreateOptions{})
 	s.NoError(err)
 	err = s.client.Create("testCeateKeyThatDoesAlreadyExist", TransitCreateOptions{})

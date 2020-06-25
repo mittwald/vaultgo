@@ -217,8 +217,8 @@ type TransitEncryptResponseBatch struct {
 
 func (t *Transit) EncryptBatch(key string, opts TransitEncryptOptionsBatch) (*TransitEncryptResponseBatch, error) {
 	res := &TransitEncryptResponseBatch{}
-	for i := range opts.BatchInput{
-		opts.BatchInput[i].Plaintext =  base64.StdEncoding.EncodeToString([]byte(opts.BatchInput[i].Plaintext ))
+	for i := range opts.BatchInput {
+		opts.BatchInput[i].Plaintext = base64.StdEncoding.EncodeToString([]byte(opts.BatchInput[i].Plaintext))
 	}
 	err := t.Client.Write([]string{"v1", t.MountPoint, "encrypt", key}, opts, res)
 	if err != nil {
@@ -233,20 +233,20 @@ type TransitDecryptOptions struct {
 	Nonce      null.String `json:"nonce"`
 }
 
-type TransitDecrpytResponse struct {
+type TransitDecryptResponse struct {
 	Data struct {
 		Plaintext string `json:"plaintext"`
 	} `json:"data"`
 }
 
-func (t *Transit) Decrypt(key string, opts TransitDecryptOptions) (*TransitDecrpytResponse, error) {
-	res := &TransitDecrpytResponse{}
+func (t *Transit) Decrypt(key string, opts TransitDecryptOptions) (*TransitDecryptResponse, error) {
+	res := &TransitDecryptResponse{}
 	err := t.Client.Write([]string{"v1", t.MountPoint, "decrypt", key}, opts, res)
 	if err != nil {
 		return nil, t.mapError(err)
 	}
 	blob, err := base64.StdEncoding.DecodeString(res.Data.Plaintext)
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 	res.Data.Plaintext = string(blob)
@@ -269,9 +269,9 @@ func (t *Transit) DecryptBatch(key string, opts TransitDecryptOptionsBatch) (*Tr
 	if err != nil {
 		return nil, err
 	}
-	for i := range res.Data.BatchResults{
+	for i := range res.Data.BatchResults {
 		blob, err := base64.StdEncoding.DecodeString(res.Data.BatchResults[i].Plaintext)
-		if err != nil{
+		if err != nil {
 			return nil, err
 		}
 		res.Data.BatchResults[i].Plaintext = string(blob)
@@ -280,10 +280,10 @@ func (t *Transit) DecryptBatch(key string, opts TransitDecryptOptionsBatch) (*Tr
 	return res, nil
 }
 
-func (t *Transit) mapError(err error) error{
-	if resErr, ok := err.(*api.ResponseError); ok{
-		if resErr.StatusCode == http.StatusBadRequest{
-			if len(resErr.Errors) == 1 && resErr.Errors[0] == "encryption key not found"{
+func (t *Transit) mapError(err error) error {
+	if resErr, ok := err.(*api.ResponseError); ok {
+		if resErr.StatusCode == http.StatusBadRequest {
+			if len(resErr.Errors) == 1 && resErr.Errors[0] == "encryption key not found" {
 				return ErrEncKeyNotFound
 			}
 		}
