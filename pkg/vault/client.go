@@ -24,7 +24,7 @@ func WithCaCert(cert string) *TLSConfig {
 
 func WithCaPath(path string) *TLSConfig {
 	return &TLSConfig{
-		&vault.TLSConfig{CAPath: ""},
+		&vault.TLSConfig{CAPath: path},
 	}
 }
 
