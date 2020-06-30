@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	vault "github.com/hashicorp/vault/api"
 	"io/ioutil"
-	"log"
 	"net/url"
 )
 
@@ -55,6 +54,7 @@ func NewClient(addr string, tlsConf *TLSConfig, opts ...ClientOpts) (*Client, er
 
 func (c *Client) Request(method string, path []string, body interface{}, parameters url.Values, response interface{}) error {
 	pathString := resolvePath(path)
+	pathString = url.PathEscape(pathString)
 	r := c.NewRequest(method, pathString)
 
 	if body != nil {

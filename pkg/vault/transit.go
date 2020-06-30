@@ -59,7 +59,7 @@ type TransitReadResponse struct {
 
 func (t *Transit) Read(key string) (*TransitReadResponse, error) {
 	readRes := &TransitReadResponse{}
-	err := t.Client.Read([]string{"v1", t.MountPoint, "keys", url.PathEscape(key)}, nil, readRes)
+	err := t.Client.Read([]string{"v1", t.MountPoint, "keys", key}, nil, readRes)
 	if err != nil {
 		return nil, err
 	}
