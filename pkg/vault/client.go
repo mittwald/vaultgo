@@ -18,7 +18,7 @@ type TLSConfig struct {
 
 func WithCaCert(cert string) *TLSConfig {
 	return &TLSConfig{
-		&vault.TLSConfig{CACert: ""},
+		&vault.TLSConfig{CACert: cert},
 	}
 }
 
