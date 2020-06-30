@@ -32,10 +32,10 @@ func NewClient(addr string, tlsConf *TLSConfig, opts ...ClientOpts) (*Client, er
 	conf := vault.DefaultConfig()
 	conf.Address = addr
 	if tlsConf != nil {
-		err := conf.ConfigureTLS(tlsConf.TLSConfig)
-		if err != nil {
-			log.Fatal(err)
+		if err := conf.ConfigureTLS(tlsConf.TLSConfig); err != nil {
+			return nil, err
 		}
+
 	}
 
 	vaultClient, err := vault.NewClient(conf)
