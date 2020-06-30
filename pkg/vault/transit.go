@@ -97,11 +97,7 @@ func (t *Transit) ForceDelete(key string) error {
 		return err
 	}
 
-	err = t.Delete(key)
-	if err != nil {
-		return err
-	}
-	return nil
+	return t.Delete(key)
 }
 
 type TransitUpdateOptions struct {
