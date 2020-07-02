@@ -1,10 +1,8 @@
-//+build example
-
 package main
 
 import (
 	"fmt"
-	vault "gitlab.mittwald.it/coab-0x7e7/libraries/vaultgo/pkg/vault"
+	"gitlab.mittwald.it/coab-0x7e7/libraries/vaultgo"
 	"gopkg.in/guregu/null.v3"
 	"log"
 )
