@@ -19,7 +19,7 @@ func main() {
 
 	key := "test123bacd"
 
-	err = transit.Create(key, vault.TransitCreateOptions{
+	err = transit.Create(key, &vault.TransitCreateOptions{
 		Exportable: null.BoolFrom(true),
 	})
 	if err != nil {

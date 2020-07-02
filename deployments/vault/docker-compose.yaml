@@ -1,7 +1,7 @@
 version: '3.6'
 services:
   vault:
-    image: vault:latest
+    image: vault:1.4.2
     container_name: vault
     restart: unless-stopped
     ports:
