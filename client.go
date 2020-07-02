@@ -2,13 +2,14 @@ package vault
 
 import (
 	"encoding/json"
-	"github.com/hashicorp/vault/api"
 	"io/ioutil"
 	"net/url"
+
+	"github.com/hashicorp/vault/api"
 )
 
 type Client struct {
-	api.Client
+	*api.Client
 }
 
 type TLSConfig struct {
@@ -29,19 +30,22 @@ func WithCaPath(path string) *TLSConfig {
 
 func NewClient(addr string, tlsConf *TLSConfig, opts ...ClientOpts) (*Client, error) {
 	conf := api.DefaultConfig()
+
 	conf.Address = addr
+
 	if tlsConf != nil {
 		if err := conf.ConfigureTLS(tlsConf.TLSConfig); err != nil {
 			return nil, err
 		}
-
 	}
 
 	vaultClient, err := api.NewClient(conf)
 	if err != nil {
 		return nil, err
 	}
-	client := &Client{Client: *vaultClient}
+
+	client := &Client{Client: vaultClient}
+
 	for _, opt := range opts {
 		err := opt(client)
 		if err != nil {
@@ -82,6 +86,7 @@ func (c *Client) Request(method string, path []string, body interface{}, paramet
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -89,14 +94,14 @@ func (c *Client) Read(path []string, parameters url.Values, response interface{}
 	return c.Request("GET", path, nil, parameters, response)
 }
 
-func (c *Client) Write(path []string, body interface{}, response interface{}) error {
+func (c *Client) Write(path []string, body, response interface{}) error {
 	return c.Request("POST", path, body, nil, response)
 }
 
-func (c *Client) Delete(path []string, body interface{}, response interface{}) error {
+func (c *Client) Delete(path []string, body, response interface{}) error {
 	return c.Request("DELETE", path, body, nil, response)
 }
 
-func (c *Client) List(path []string, body interface{}, response interface{}) error {
+func (c *Client) List(path []string, body, response interface{}) error {
 	return c.Request("LIST", path, body, nil, response)
 }

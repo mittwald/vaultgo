@@ -3,12 +3,12 @@ package vault
 import (
 	"context"
 	"fmt"
+	"github.com/mittwald/vaultGO/test/testdata"
 	"github.com/stretchr/testify/require"
-	"gitlab.mittwald.it/coab-0x7e7/libraries/vaultgo/test/testdata"
 	"testing"
 	"time"
 
-	hcvault "github.com/hashicorp/vault/api"
+	"github.com/hashicorp/vault/api"
 	"github.com/stretchr/testify/suite"
 	"gopkg.in/guregu/null.v3"
 )
@@ -32,7 +32,7 @@ func TestTransitTestSuite(t *testing.T) {
 }
 
 func (s *TransitTestSuite) TestCreateAndRead() {
-	err := s.client.Create("testCreateAndRead", TransitCreateOptions{
+	err := s.client.Create("testCreateAndRead", &TransitCreateOptions{
 		Exportable: null.BoolFrom(true),
 	})
 	require.NoError(s.T(), err)
@@ -44,7 +44,7 @@ func (s *TransitTestSuite) TestCreateAndRead() {
 }
 
 func (s *TransitTestSuite) TestCreateAndList() {
-	err := s.client.Create("testCreateAndList", TransitCreateOptions{
+	err := s.client.Create("testCreateAndList", &TransitCreateOptions{
 		Exportable: null.BoolFrom(true),
 	})
 	require.NoError(s.T(), err)
@@ -60,7 +60,7 @@ func (s *TransitTestSuite) TestCreateAndList() {
 
 func (s *TransitTestSuite) TestCreateListAllowDelete() {
 	key := "testCreateListAllowDelete"
-	err := s.client.Create(key, TransitCreateOptions{
+	err := s.client.Create(key, &TransitCreateOptions{
 		Exportable: null.BoolFrom(true),
 	})
 	require.NoError(s.T(), err)
@@ -84,7 +84,7 @@ func (s *TransitTestSuite) TestCreateListAllowDelete() {
 
 func (s *TransitTestSuite) TestCreateListForceDelete() {
 	key := "testCreateListForceDelete"
-	err := s.client.Create(key, TransitCreateOptions{
+	err := s.client.Create(key, &TransitCreateOptions{
 		Exportable: null.BoolFrom(true),
 	})
 	require.NoError(s.T(), err)
@@ -103,7 +103,7 @@ func (s *TransitTestSuite) TestCreateListForceDelete() {
 
 func (s *TransitTestSuite) TestRotate() {
 	key := "testRotate"
-	err := s.client.Create(key, TransitCreateOptions{
+	err := s.client.Create(key, &TransitCreateOptions{
 		Exportable: null.BoolFrom(true),
 	})
 	require.NoError(s.T(), err)
@@ -121,7 +121,7 @@ func (s *TransitTestSuite) TestRotate() {
 
 func (s *TransitTestSuite) TestExport() {
 	key := "testExport"
-	err := s.client.Create(key, TransitCreateOptions{
+	err := s.client.Create(key, &TransitCreateOptions{
 		Exportable: null.BoolFrom(true),
 	})
 	require.NoError(s.T(), err)
@@ -137,7 +137,7 @@ func (s *TransitTestSuite) TestExport() {
 }
 
 func (s *TransitTestSuite) TestKeyExists() {
-	err := s.client.Create("testExists", TransitCreateOptions{
+	err := s.client.Create("testExists", &TransitCreateOptions{
 		Exportable: null.BoolFrom(true),
 	})
 	require.NoError(s.T(), err)
@@ -152,17 +152,17 @@ func (s *TransitTestSuite) TestKeyExists() {
 }
 
 func (s *TransitTestSuite) TestEncryptDecrypt() {
-	err := s.client.Create("testEncryptDecrypt", TransitCreateOptions{})
+	err := s.client.Create("testEncryptDecrypt", &TransitCreateOptions{})
 	require.NoError(s.T(), err)
 
 	text := "test"
 
-	enc, err := s.client.Encrypt("testEncryptDecrypt", TransitEncryptOptions{
+	enc, err := s.client.Encrypt("testEncryptDecrypt", &TransitEncryptOptions{
 		Plaintext: text,
 	})
 	require.NoError(s.T(), err)
 
-	dec, err := s.client.Decrypt("testEncryptDecrypt", TransitDecryptOptions{
+	dec, err := s.client.Decrypt("testEncryptDecrypt", &TransitDecryptOptions{
 		Ciphertext: enc.Data.Ciphertext,
 	})
 	require.NoError(s.T(), err)
@@ -171,13 +171,13 @@ func (s *TransitTestSuite) TestEncryptDecrypt() {
 }
 
 func (s *TransitTestSuite) TestEncryptDecryptBatch() {
-	err := s.client.Create("testEncryptDecryptBatch", TransitCreateOptions{})
+	err := s.client.Create("testEncryptDecryptBatch", &TransitCreateOptions{})
 	require.NoError(s.T(), err)
 
 	text1 := "test1"
 	text2 := "test2"
 
-	enc, err := s.client.EncryptBatch("testEncryptDecryptBatch", TransitEncryptOptionsBatch{
+	enc, err := s.client.EncryptBatch("testEncryptDecryptBatch", &TransitEncryptOptionsBatch{
 		BatchInput: []TransitBatchPlaintext{
 			{
 				Plaintext: text1,
@@ -199,20 +199,20 @@ func (s *TransitTestSuite) TestEncryptDecryptBatch() {
 }
 
 func (s *TransitTestSuite) TestDecryptWithoutKey() {
-	_, err := s.client.Decrypt("test404", TransitDecryptOptions{
+	_, err := s.client.Decrypt("test404", &TransitDecryptOptions{
 		Ciphertext: "asdf",
 	})
 	s.Equal(ErrEncKeyNotFound, err)
 }
 
 func (s *TransitTestSuite) TestDecryptWithBadCipher() {
-	err := s.client.Create("j7456gsegtfae", TransitCreateOptions{})
+	err := s.client.Create("j7456gsegtfae", &TransitCreateOptions{})
 	require.NoError(s.T(), err)
 
-	_, err = s.client.Decrypt("j7456gsegtfae", TransitDecryptOptions{
+	_, err = s.client.Decrypt("j7456gsegtfae", &TransitDecryptOptions{
 		Ciphertext: "nociphertext",
 	})
-	resErr, ok := err.(*hcvault.ResponseError)
+	resErr, ok := err.(*api.ResponseError)
 	if ok {
 		fmt.Println(resErr)
 		s.Equal(resErr.StatusCode, 400)
@@ -222,8 +222,8 @@ func (s *TransitTestSuite) TestDecryptWithBadCipher() {
 }
 
 func (s *TransitTestSuite) TestCreateKeyThatDoesAlreadyExist() {
-	err := s.client.Create("testCeateKeyThatDoesAlreadyExist", TransitCreateOptions{})
+	err := s.client.Create("testCeateKeyThatDoesAlreadyExist", &TransitCreateOptions{})
 	require.NoError(s.T(), err)
-	err = s.client.Create("testCeateKeyThatDoesAlreadyExist", TransitCreateOptions{})
+	err = s.client.Create("testCeateKeyThatDoesAlreadyExist", &TransitCreateOptions{})
 	require.NoError(s.T(), err)
 }

@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"gitlab.mittwald.it/coab-0x7e7/libraries/vaultgo"
+	"github.com/mittwald/vaultGO"
 	"gopkg.in/guregu/null.v3"
 	"log"
 )
@@ -19,7 +19,7 @@ func main() {
 
 	key := "test123bacd"
 
-	err = transit.Create(key, vault.TransitCreateOptions{
+	err = transit.Create(key, &vault.TransitCreateOptions{
 		Exportable: null.BoolFrom(true),
 	})
 	if err != nil {

@@ -1,0 +1,59 @@
+linters-settings:
+  govet:
+    check-shadowing: true
+  golint:
+    min-confidence: 0
+  gocyclo:
+    min-complexity: 20
+  maligned:
+    suggest-new: true
+  dupl:
+    threshold: 100
+  goconst:
+    min-len: 2
+    min-occurrences: 2
+  depguard:
+    list-type: blacklist
+    packages:
+    # logging is allowed only by logutils.Log, logrus
+    # is allowed to use only in logutils package
+    #- github.com/sirupsen/logrus
+  misspell:
+    locale: US
+  lll:
+    line-length: 180
+  funlen:
+    lines: 100
+    statements: 60
+  gocritic:
+    enabled-tags:
+      - performance
+      - style
+      #- experimental
+    disabled-checks:
+      - wrapperFunc
+      - commentFormatting # https://github.com/go-critic/go-critic/issues/755
+      - unnamedResult
+      - ifElseChain
+
+linters:
+  enable-all: true
+
+issues:
+  # Excluding configuration per-path, per-linter, per-text and per-source
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - gomnd
+
+run:
+  skip-dirs:
+    - test/
+    - examples/
+    - deployments/
+  skip-files:
+    - .*_test.go
+  deadline: 60m
+
+service:
+  golangci-lint-version: 1.27.x

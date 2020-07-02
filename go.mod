@@ -1,6 +1,6 @@
-module gitlab.mittwald.it/coab-0x7e7/libraries/vaultgo
+module github.com/mittwald/vaultGO
 
-go 1.13
+go 1.14
 
 require (
 	github.com/Microsoft/hcsshim v0.8.9 // indirect
