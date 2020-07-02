@@ -253,14 +253,14 @@ type TransitDecryptOptionsBatch struct {
 	BatchInput []TransitBatchCiphertext `json:"batch_input"`
 }
 
-type TransitDecrpytResponseBatch struct {
+type TransitDecryptResponseBatch struct {
 	Data struct {
 		BatchResults []TransitBatchPlaintext `json:"batch_results"`
 	} `json:"data"`
 }
 
-func (t *Transit) DecryptBatch(key string, opts TransitDecryptOptionsBatch) (*TransitDecrpytResponseBatch, error) {
-	res := &TransitDecrpytResponseBatch{}
+func (t *Transit) DecryptBatch(key string, opts TransitDecryptOptionsBatch) (*TransitDecryptResponseBatch, error) {
+	res := &TransitDecryptResponseBatch{}
 	err := t.Client.Write([]string{"v1", t.MountPoint, "decrypt", key}, opts, res)
 	if err != nil {
 		return nil, err
