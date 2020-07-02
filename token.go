@@ -31,7 +31,7 @@ func NewTokenAuth(c *Client, p AuthProvider) *TokenAuth {
 func (t *TokenAuth) EnableAutoRenew(errs chan<- error) {
 	go func() {
 		for {
-			renewIn := t.expires.Sub(time.Now()) - renewBeforeDuration
+			renewIn := time.Until(t.expires) - renewBeforeDuration
 			// ticker on duration 0 will panic :(
 			// this will cause an instant renew
 			if renewIn <= 0 {

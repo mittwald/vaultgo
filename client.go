@@ -2,33 +2,33 @@ package vault
 
 import (
 	"encoding/json"
-	vault "github.com/hashicorp/vault/api"
+	"github.com/hashicorp/vault/api"
 	"io/ioutil"
 	"net/url"
 )
 
 type Client struct {
-	vault.Client
+	api.Client
 }
 
 type TLSConfig struct {
-	*vault.TLSConfig
+	*api.TLSConfig
 }
 
 func WithCaCert(cert string) *TLSConfig {
 	return &TLSConfig{
-		&vault.TLSConfig{CACert: cert},
+		&api.TLSConfig{CACert: cert},
 	}
 }
 
 func WithCaPath(path string) *TLSConfig {
 	return &TLSConfig{
-		&vault.TLSConfig{CAPath: path},
+		&api.TLSConfig{CAPath: path},
 	}
 }
 
 func NewClient(addr string, tlsConf *TLSConfig, opts ...ClientOpts) (*Client, error) {
-	conf := vault.DefaultConfig()
+	conf := api.DefaultConfig()
 	conf.Address = addr
 	if tlsConf != nil {
 		if err := conf.ConfigureTLS(tlsConf.TLSConfig); err != nil {
@@ -37,7 +37,7 @@ func NewClient(addr string, tlsConf *TLSConfig, opts ...ClientOpts) (*Client, er
 
 	}
 
-	vaultClient, err := vault.NewClient(conf)
+	vaultClient, err := api.NewClient(conf)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +54,6 @@ func NewClient(addr string, tlsConf *TLSConfig, opts ...ClientOpts) (*Client, er
 
 func (c *Client) Request(method string, path []string, body interface{}, parameters url.Values, response interface{}) error {
 	pathString := resolvePath(path)
-	pathString = url.PathEscape(pathString)
 	r := c.NewRequest(method, pathString)
 
 	if body != nil {
