@@ -25,7 +25,7 @@ Initialize a new Vault Client using your token and endpoint:
 package main
 
 import (
-	vault "gitlab.mittwald.it/coab-0x7e7/libraries/vaultgo/pkg/vault"
+	"github.com/mittwald/vaultGO/pkg/vault"
 	"log"
 )
 
@@ -47,7 +47,7 @@ func main() {
 package main
 
 import (
-	vault "gitlab.mittwald.it/coab-0x7e7/libraries/vaultgo/pkg/vault"
+	"github.com/mittwald/vaultGO/pkg/vault"
 	"log"
 )
 

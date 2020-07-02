@@ -3,12 +3,12 @@ package vault
 import (
 	"context"
 	"fmt"
+	"github.com/mittwald/vaultGO/test/testdata"
 	"github.com/stretchr/testify/require"
-	"gitlab.mittwald.it/coab-0x7e7/libraries/vaultgo/test/testdata"
 	"testing"
 	"time"
 
-	hcvault "github.com/hashicorp/vault/api"
+	"github.com/hashicorp/vault/api"
 	"github.com/stretchr/testify/suite"
 	"gopkg.in/guregu/null.v3"
 )
@@ -212,7 +212,7 @@ func (s *TransitTestSuite) TestDecryptWithBadCipher() {
 	_, err = s.client.Decrypt("j7456gsegtfae", TransitDecryptOptions{
 		Ciphertext: "nociphertext",
 	})
-	resErr, ok := err.(*hcvault.ResponseError)
+	resErr, ok := err.(*api.ResponseError)
 	if ok {
 		fmt.Println(resErr)
 		s.Equal(resErr.StatusCode, 400)
