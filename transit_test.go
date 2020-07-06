@@ -3,7 +3,7 @@ package vault
 import (
 	"context"
 	"fmt"
-	"github.com/mittwald/vaultGO/test/testdata"
+	"github.com/mittwald/vaultgo/test/testdata"
 	"github.com/stretchr/testify/require"
 	"testing"
 	"time"

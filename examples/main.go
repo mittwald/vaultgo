@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/mittwald/vaultGO"
+	"github.com/mittwald/vaultgo"
 	"gopkg.in/guregu/null.v3"
 	"log"
 )
