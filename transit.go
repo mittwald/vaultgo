@@ -30,6 +30,7 @@ type TransitCreateOptions struct {
 	Derived              null.Bool `json:"derived,omitempty"`
 	Exportable           null.Bool `json:"exportable,omitempty"`
 	AllowPlaintextBackup null.Bool `json:"allow_plaintext_backup,omitempty"`
+	Type                 string    `json:"type,omitempty"`
 }
 
 func (t *Transit) Create(key string, opts *TransitCreateOptions) error {
@@ -46,20 +47,20 @@ type TransitReadResponse struct {
 }
 
 type TransitReadResponseData struct {
-	Name                 string        `json:"name"`
-	Type                 string        `json:"type"`
-	Keys                 map[int]int64 `json:"keys"`
-	MinDecryptionVersion int           `json:"min_decrytion_version"`
-	MinEncryptionVersion int           `json:"min_encryption_version"`
-	LatestVersion        int           `json:"latest_version"`
-	DeletionAllowed      bool          `json:"deletion_allowed"`
-	Derived              bool          `json:"derived"`
-	Exportable           bool          `json:"exportable"`
-	AllowPlaintextBackup bool          `json:"allow_plaintext_backup"`
-	SupportsEncryption   bool          `json:"supports_encryption"`
-	SupportsDecryption   bool          `json:"supports_decryption"`
-	SupportsDerivation   bool          `json:"supports_derivation"`
-	SupportsSigning      bool          `json:"supports_signing"`
+	Name                 string              `json:"name"`
+	Type                 string              `json:"type"`
+	Keys                 map[int]interface{} `json:"keys"`
+	MinDecryptionVersion int                 `json:"min_decrytion_version"`
+	MinEncryptionVersion int                 `json:"min_encryption_version"`
+	LatestVersion        int                 `json:"latest_version"`
+	DeletionAllowed      bool                `json:"deletion_allowed"`
+	Derived              bool                `json:"derived"`
+	Exportable           bool                `json:"exportable"`
+	AllowPlaintextBackup bool                `json:"allow_plaintext_backup"`
+	SupportsEncryption   bool                `json:"supports_encryption"`
+	SupportsDecryption   bool                `json:"supports_decryption"`
+	SupportsDerivation   bool                `json:"supports_derivation"`
+	SupportsSigning      bool                `json:"supports_signing"`
 }
 
 func (t *Transit) Read(key string) (*TransitReadResponse, error) {
