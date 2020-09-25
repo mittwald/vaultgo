@@ -15,7 +15,7 @@ func NewKubernetesAuth(c *Client, role string, opts ...KubernetesAuthOpt) (AuthP
 	k := &kubernetesAuth{
 		Client:     c,
 		mountPoint: "kubernetes",
-		role: role,
+		role:       role,
 	}
 
 	for _, opt := range opts {
