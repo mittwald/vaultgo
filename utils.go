@@ -9,5 +9,5 @@ func resolvePath(parts []string) string {
 		trimmedParts[i] = strings.Trim(v, "/")
 	}
 
-	return strings.Join(trimmedParts, "/")
+	return "/" + strings.Join(trimmedParts, "/")
 }
