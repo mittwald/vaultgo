@@ -52,7 +52,7 @@ func loadJwt(path string) (string, error) {
 	return string(content), nil
 }
 
-type authResponse struct {
+type AuthResponse struct {
 	Auth struct {
 		ClientToken   string   `json:"client_token"`
 		Accessor      string   `json:"accessor"`
@@ -74,15 +74,18 @@ type kubernetesAuthConfig struct {
 	JWT  string `json:"jwt"`
 }
 
-func (k kubernetesAuth) Auth() (*authResponse, error) {
+func (k kubernetesAuth) Auth() (*AuthResponse, error) {
 	conf := &kubernetesAuthConfig{
 		Role: k.role,
 		JWT:  k.jwt,
 	}
 
-	res := &authResponse{}
+	res := &AuthResponse{}
 
-	err := k.Client.Write([]string{"v1", "auth", k.mountPoint, "login"}, conf, res)
+	renew := false
+	err := k.Client.Write([]string{"v1", "auth", k.mountPoint, "login"}, conf, res, &RequestOptions{
+		RenewToken: &renew,
+	})
 	if err != nil {
 		return nil, err
 	}

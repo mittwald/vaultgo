@@ -10,6 +10,25 @@ import (
 
 type Client struct {
 	*api.Client
+
+	auth AuthProvider
+}
+
+type Service struct {
+	client     *Client
+	MountPoint string
+}
+
+type RequestOptions struct {
+	Parameters url.Values
+
+	// RenewToken defines if the client should retry this Request with a new Token if it fails because of
+	// 403 Permission Denied
+	// The default behaviour of the client is to always Request a new Token on 403
+	// Only if this is explicitly set to false, the client will continue processing the first failed request
+	// This should generally only be disabled for TokenAuth requests (a failed TokenAuth request can't be fixed by
+	// doing another TokenAuth request, this would lead to infinite recursion)
+	RenewToken *bool
 }
 
 type TLSConfig struct {
@@ -53,10 +72,26 @@ func NewClient(addr string, tlsConf *TLSConfig, opts ...ClientOpts) (*Client, er
 		}
 	}
 
+	if client.auth != nil {
+		if err := client.renewToken(); err != nil {
+			return nil, err
+		}
+	}
+
 	return client, nil
 }
 
-func (c *Client) Request(method string, path []string, body interface{}, parameters url.Values, response interface{}) error {
+func (c *Client) renewToken() error {
+	res, err := c.auth.Auth()
+	if err != nil {
+		return err
+	}
+
+	c.SetToken(res.Auth.ClientToken)
+	return nil
+}
+
+func (c *Client) Request(method string, path []string, body interface{}, response interface{}, opts *RequestOptions) error {
 	pathString := resolvePath(path)
 	r := c.NewRequest(method, pathString)
 
@@ -66,42 +101,55 @@ func (c *Client) Request(method string, path []string, body interface{}, paramet
 		}
 	}
 
-	if parameters != nil {
-		r.Params = parameters
+	if opts != nil && opts.Parameters != nil {
+		r.Params = opts.Parameters
 	}
 
 	resp, err := c.RawRequest(r)
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
 
-	if response != nil {
-		respBody, err := ioutil.ReadAll(resp.Body)
+	tokenRenewRequested := opts != nil && (opts.RenewToken == nil || *opts.RenewToken == true)
+	if resp.StatusCode == 403 && c.auth != nil && tokenRenewRequested {
+		_ = resp.Body.Close()
+
+		err := c.renewToken()
 		if err != nil {
 			return err
 		}
 
-		if err = json.Unmarshal(respBody, response); err != nil {
+		resp, err = c.RawRequest(r)
+		if err != nil {
 			return err
 		}
+	}
+	defer resp.Body.Close()
+
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	if err = json.Unmarshal(respBody, response); err != nil {
+		return err
 	}
 
 	return nil
 }
 
-func (c *Client) Read(path []string, parameters url.Values, response interface{}) error {
-	return c.Request("GET", path, nil, parameters, response)
+func (c *Client) Read(path []string, response interface{}, opts *RequestOptions) error {
+	return c.Request("GET", path, nil, response, opts)
 }
 
-func (c *Client) Write(path []string, body, response interface{}) error {
-	return c.Request("POST", path, body, nil, response)
+func (c *Client) Write(path []string, body, response interface{}, opts *RequestOptions) error {
+	return c.Request("POST", path, body, response, opts)
 }
 
-func (c *Client) Delete(path []string, body, response interface{}) error {
-	return c.Request("DELETE", path, body, nil, response)
+func (c *Client) Delete(path []string, body, response interface{}, opts *RequestOptions) error {
+	return c.Request("DELETE", path, body, response, opts)
 }
 
-func (c *Client) List(path []string, body, response interface{}) error {
-	return c.Request("LIST", path, body, nil, response)
+func (c *Client) List(path []string, body, response interface{}, opts *RequestOptions) error {
+	return c.Request("LIST", path, body, response, opts)
 }

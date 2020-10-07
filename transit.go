@@ -10,8 +10,7 @@ import (
 )
 
 type Transit struct {
-	Client     *Client
-	MountPoint string
+	Service
 }
 
 func (c *Client) Transit() *Transit {
@@ -20,8 +19,10 @@ func (c *Client) Transit() *Transit {
 
 func (c *Client) TransitWithMountPoint(mountPoint string) *Transit {
 	return &Transit{
-		Client:     c,
-		MountPoint: mountPoint,
+		Service: Service{
+			client:     c,
+			MountPoint: mountPoint,
+		},
 	}
 }
 
@@ -34,7 +35,7 @@ type TransitCreateOptions struct {
 }
 
 func (t *Transit) Create(key string, opts *TransitCreateOptions) error {
-	err := t.Client.Write([]string{"v1", t.MountPoint, "keys", url.PathEscape(key)}, opts, nil)
+	err := t.client.Write([]string{"v1", t.MountPoint, "keys", url.PathEscape(key)}, opts, nil, nil)
 	if err != nil {
 		return err
 	}
@@ -66,7 +67,7 @@ type TransitReadResponseData struct {
 func (t *Transit) Read(key string) (*TransitReadResponse, error) {
 	readRes := &TransitReadResponse{}
 
-	err := t.Client.Read([]string{"v1", t.MountPoint, "keys", url.PathEscape(key)}, nil, readRes)
+	err := t.client.Read([]string{"v1", t.MountPoint, "keys", url.PathEscape(key)}, readRes, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +84,7 @@ type TransitListResponse struct {
 func (t *Transit) List() (*TransitListResponse, error) {
 	readRes := &TransitListResponse{}
 
-	err := t.Client.List([]string{"v1", t.MountPoint, "keys"}, nil, readRes)
+	err := t.client.List([]string{"v1", t.MountPoint, "keys"}, nil, readRes, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +93,7 @@ func (t *Transit) List() (*TransitListResponse, error) {
 }
 
 func (t *Transit) Delete(key string) error {
-	err := t.Client.Delete([]string{"v1", t.MountPoint, "keys", url.PathEscape(key)}, nil, nil)
+	err := t.client.Delete([]string{"v1", t.MountPoint, "keys", url.PathEscape(key)}, nil, nil, nil)
 	if err != nil {
 		return err
 	}
@@ -120,7 +121,7 @@ type TransitUpdateOptions struct {
 }
 
 func (t *Transit) Update(key string, opts TransitUpdateOptions) error {
-	err := t.Client.Write([]string{"v1", t.MountPoint, "keys", url.PathEscape(key), "config"}, opts, nil)
+	err := t.client.Write([]string{"v1", t.MountPoint, "keys", url.PathEscape(key), "config"}, opts, nil, nil)
 	if err != nil {
 		return err
 	}
@@ -129,7 +130,7 @@ func (t *Transit) Update(key string, opts TransitUpdateOptions) error {
 }
 
 func (t *Transit) Rotate(key string) error {
-	err := t.Client.Write([]string{"v1", t.MountPoint, "keys", url.PathEscape(key), "rotate"}, nil, nil)
+	err := t.client.Write([]string{"v1", t.MountPoint, "keys", url.PathEscape(key), "rotate"}, nil, nil, nil)
 	if err != nil {
 		return err
 	}
@@ -158,7 +159,7 @@ func (t *Transit) Export(key string, opts TransitExportOptions) (*TransitExportR
 		path = append(path, opts.Version)
 	}
 
-	err := t.Client.Read(path, nil, res)
+	err := t.client.Read(path, res, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -211,7 +212,7 @@ func (t *Transit) Encrypt(key string, opts *TransitEncryptOptions) (*TransitEncr
 
 	opts.Plaintext = base64.StdEncoding.EncodeToString([]byte(opts.Plaintext))
 
-	err := t.Client.Write([]string{"v1", t.MountPoint, "encrypt", url.PathEscape(key)}, opts, res)
+	err := t.client.Write([]string{"v1", t.MountPoint, "encrypt", url.PathEscape(key)}, opts, res, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -239,7 +240,7 @@ func (t *Transit) EncryptBatch(key string, opts *TransitEncryptOptionsBatch) (*T
 		opts.BatchInput[i].Plaintext = base64.StdEncoding.EncodeToString([]byte(opts.BatchInput[i].Plaintext))
 	}
 
-	err := t.Client.Write([]string{"v1", t.MountPoint, "encrypt", url.PathEscape(key)}, opts, res)
+	err := t.client.Write([]string{"v1", t.MountPoint, "encrypt", url.PathEscape(key)}, opts, res, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -262,7 +263,7 @@ type TransitDecryptResponse struct {
 func (t *Transit) Decrypt(key string, opts *TransitDecryptOptions) (*TransitDecryptResponse, error) {
 	res := &TransitDecryptResponse{}
 
-	err := t.Client.Write([]string{"v1", t.MountPoint, "decrypt", url.PathEscape(key)}, opts, res)
+	err := t.client.Write([]string{"v1", t.MountPoint, "decrypt", url.PathEscape(key)}, opts, res, nil)
 	if err != nil {
 		return nil, t.mapError(err)
 	}
@@ -290,7 +291,7 @@ type TransitDecryptResponseBatch struct {
 func (t *Transit) DecryptBatch(key string, opts TransitDecryptOptionsBatch) (*TransitDecryptResponseBatch, error) {
 	res := &TransitDecryptResponseBatch{}
 
-	err := t.Client.Write([]string{"v1", t.MountPoint, "decrypt", key}, opts, res)
+	err := t.client.Write([]string{"v1", t.MountPoint, "decrypt", key}, opts, res, nil)
 	if err != nil {
 		return nil, err
 	}
