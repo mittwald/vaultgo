@@ -81,10 +81,9 @@ func (k kubernetesAuth) Auth() (*AuthResponse, error) {
 	}
 
 	res := &AuthResponse{}
-	renew := false
 
 	err := k.Client.Write([]string{"v1", "auth", k.mountPoint, "login"}, conf, res, &RequestOptions{
-		RenewToken: &renew,
+		SkipRenewal: true,
 	})
 	if err != nil {
 		return nil, err
