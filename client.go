@@ -2,9 +2,10 @@ package vault
 
 import (
 	"encoding/json"
-	"github.com/pkg/errors"
 	"io/ioutil"
 	"net/url"
+
+	"github.com/pkg/errors"
 
 	"github.com/hashicorp/vault/api"
 )
