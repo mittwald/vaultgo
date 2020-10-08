@@ -21,63 +21,21 @@ Token-based and Kubernetes Auth are supported as of now.
 
 Initialize a new Vault Client using your token and endpoint:
 
-```go
-package main
-
-import (
-	"github.com/mittwald/vaultgo/pkg/vault"
-	"log"
-)
-
-func main() {
-	c, err := vault.NewClient("https://vault:8200/", 
-		vault.WithCaPath(""),
-		vault.WithAuthToken("SECRET"),
-	)
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-```
+[Example](https://pkg.go.dev/github.com/mittwald/vaultgo#example-TokenBased)
 
 ### Kubernetes In-Cluster Example
 
-```go
-package main
-
-import (
-	"github.com/mittwald/vaultgo/pkg/vault"
-	"log"
-)
-
-func main() {
-	renewErrs := make(chan error)
-	vault.WithKubernetesAuth("test", true, renewErrs)
-	c, err := vault.NewClient("https://vault:8200/", vault.WithCaPath(""), vault.WithKubernetesAuth("myrole", true, renewErrs))
-	go func() {
-		for {
-			err := <-renewErrs
-			if err != nil {
-				log.Fatal(err)
-			}
-		}
-	}()
-}
-```
+[Example](https://pkg.go.dev/github.com/mittwald/vaultgo#example-K8sInCluster)
 
 ## Usage
 
 Once the Vault Client is created, instanciate new clients for each engine:
 
-```
-// returns Transit client (uses mountpoint transit)
-transit := c.Transit()
-transit := c.TransitWithMountPoint("transit")
-```
+[TransitList Example](https://pkg.go.dev/github.com/mittwald/vaultgo#Transit.List)
 
 ### Run Tests
+
+Tests require a running docker daemon. The test will automatically create a vault container.
 ```
-> docker-compose up -d
 > make test
 ```
