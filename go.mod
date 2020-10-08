@@ -10,7 +10,6 @@ require (
 	github.com/frankban/quicktest v1.10.0 // indirect
 	github.com/go-test/deep v1.0.6 // indirect
 	github.com/golang/protobuf v1.4.2 // indirect
-	github.com/google/go-cmp v0.5.0 // indirect
 	github.com/hashicorp/go-hclog v0.14.1 // indirect
 	github.com/hashicorp/go-multierror v1.1.0 // indirect
 	github.com/hashicorp/go-retryablehttp v0.6.6 // indirect

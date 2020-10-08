@@ -2,7 +2,7 @@ package vault
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"github.com/mittwald/vaultgo/test/testdata"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -212,11 +212,11 @@ func (s *TransitTestSuite) TestDecryptWithBadCipher() {
 	_, err = s.client.Decrypt("j7456gsegtfae", &TransitDecryptOptions{
 		Ciphertext: "nociphertext",
 	})
-	resErr, ok := err.(*api.ResponseError)
-	if ok {
-		fmt.Println(resErr)
+	resErr := &api.ResponseError{}
+	if errors.As(err, &resErr) {
 		s.Equal(resErr.StatusCode, 400)
 	} else {
+		s.T().Logf("%#v", err)
 		s.Fail("unexpected error type")
 	}
 }
