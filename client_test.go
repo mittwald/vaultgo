@@ -27,7 +27,7 @@ func Example_k8sInCluster() {
 	log.Println(c.Address())
 }
 
-func ExampleTransit_Create() {
+func ExampleTransit_List() {
 	c, err := NewClient("https://vault:8200/",
 		WithCaPath(""),
 		WithAuthToken("SECRET"),
