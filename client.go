@@ -3,6 +3,7 @@ package vault
 import (
 	"encoding/json"
 	"io/ioutil"
+	"net/http"
 	"net/url"
 
 	"github.com/pkg/errors"
@@ -24,13 +25,14 @@ type Service struct {
 type RequestOptions struct {
 	Parameters url.Values
 
-	// RenewToken defines if the client should retry this Request with a new Token if it fails because of
+	// SkipRenewal defines if the client should retry this Request with a new Token if it fails because of
 	// 403 Permission Denied
 	// The default behavior of the client is to always Request a new Token on 403
-	// Only if this is explicitly set to false, the client will continue processing the first failed request
+	// Only if this is explicitly set to true, the client will continue processing the first failed request
+	// and skip the renewal
 	// This should generally only be disabled for TokenAuth requests (a failed TokenAuth request can't be fixed by
 	// doing another TokenAuth request, this would lead to infinite recursion)
-	RenewToken *bool
+	SkipRenewal bool
 }
 
 type TLSConfig struct {
@@ -95,6 +97,10 @@ func (c *Client) renewToken() error {
 }
 
 func (c *Client) Request(method string, path []string, body, response interface{}, opts *RequestOptions) error {
+	if opts == nil {
+		opts = &RequestOptions{}
+	}
+
 	pathString := resolvePath(path)
 	r := c.NewRequest(method, pathString)
 
@@ -104,7 +110,7 @@ func (c *Client) Request(method string, path []string, body, response interface{
 		}
 	}
 
-	if opts != nil && opts.Parameters != nil {
+	if opts.Parameters != nil {
 		r.Params = opts.Parameters
 	}
 
@@ -113,8 +119,7 @@ func (c *Client) Request(method string, path []string, body, response interface{
 		return errors.Wrap(err, "request failed")
 	}
 
-	tokenRenewRequested := opts != nil && (opts.RenewToken == nil || *opts.RenewToken)
-	if resp.StatusCode == 403 && c.auth != nil && tokenRenewRequested {
+	if resp.StatusCode == http.StatusForbidden && c.auth != nil && !opts.SkipRenewal {
 		_ = resp.Body.Close()
 
 		err = c.renewToken()
