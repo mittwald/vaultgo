@@ -2,6 +2,7 @@ package vault
 
 import (
 	"encoding/json"
+	"github.com/pkg/errors"
 	"io/ioutil"
 	"net/url"
 
@@ -98,7 +99,7 @@ func (c *Client) Request(method string, path []string, body, response interface{
 
 	if body != nil {
 		if err := r.SetJSONBody(body); err != nil {
-			return err
+			return errors.Wrap(err, "failed to marshal body as JSON")
 		}
 	}
 
@@ -108,7 +109,7 @@ func (c *Client) Request(method string, path []string, body, response interface{
 
 	resp, err := c.RawRequest(r)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "request failed")
 	}
 
 	tokenRenewRequested := opts != nil && (opts.RenewToken == nil || *opts.RenewToken)
@@ -117,23 +118,27 @@ func (c *Client) Request(method string, path []string, body, response interface{
 
 		err = c.renewToken()
 		if err != nil {
-			return err
+			return errors.Wrap(err, "token renew after request returned 403 failed")
 		}
 
 		resp, err = c.RawRequest(r)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "request with new token failed")
 		}
 	}
 	defer resp.Body.Close()
 
+	if response == nil {
+		return nil
+	}
+
 	respBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "error reading response body")
 	}
 
 	if err = json.Unmarshal(respBody, response); err != nil {
-		return err
+		return errors.Wrap(err, "error unmarshalling body into response struct")
 	}
 
 	return nil

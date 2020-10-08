@@ -2,6 +2,7 @@ package vault
 
 import (
 	"encoding/base64"
+	"errors"
 	"net/http"
 	"net/url"
 
@@ -309,7 +310,8 @@ func (t *Transit) DecryptBatch(key string, opts TransitDecryptOptionsBatch) (*Tr
 }
 
 func (t *Transit) mapError(err error) error {
-	if resErr, ok := err.(*api.ResponseError); ok {
+	resErr := &api.ResponseError{}
+	if errors.As(err, &resErr) {
 		if resErr.StatusCode == http.StatusBadRequest {
 			if len(resErr.Errors) == 1 && resErr.Errors[0] == "encryption key not found" {
 				return ErrEncKeyNotFound
