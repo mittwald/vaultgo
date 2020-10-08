@@ -24,7 +24,7 @@ type RequestOptions struct {
 
 	// RenewToken defines if the client should retry this Request with a new Token if it fails because of
 	// 403 Permission Denied
-	// The default behaviour of the client is to always Request a new Token on 403
+	// The default behavior of the client is to always Request a new Token on 403
 	// Only if this is explicitly set to false, the client will continue processing the first failed request
 	// This should generally only be disabled for TokenAuth requests (a failed TokenAuth request can't be fixed by
 	// doing another TokenAuth request, this would lead to infinite recursion)
@@ -88,10 +88,11 @@ func (c *Client) renewToken() error {
 	}
 
 	c.SetToken(res.Auth.ClientToken)
+
 	return nil
 }
 
-func (c *Client) Request(method string, path []string, body interface{}, response interface{}, opts *RequestOptions) error {
+func (c *Client) Request(method string, path []string, body, response interface{}, opts *RequestOptions) error {
 	pathString := resolvePath(path)
 	r := c.NewRequest(method, pathString)
 
@@ -110,11 +111,11 @@ func (c *Client) Request(method string, path []string, body interface{}, respons
 		return err
 	}
 
-	tokenRenewRequested := opts != nil && (opts.RenewToken == nil || *opts.RenewToken == true)
+	tokenRenewRequested := opts != nil && (opts.RenewToken == nil || *opts.RenewToken)
 	if resp.StatusCode == 403 && c.auth != nil && tokenRenewRequested {
 		_ = resp.Body.Close()
 
-		err := c.renewToken()
+		err = c.renewToken()
 		if err != nil {
 			return err
 		}

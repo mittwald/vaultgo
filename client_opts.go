@@ -10,6 +10,7 @@ func WithKubernetesAuth(role string, opts ...KubernetesAuthOpt) ClientOpts {
 		}
 
 		c.auth = k8AuthProvider
+
 		return nil
 	}
 }
