@@ -3,13 +3,36 @@ package vault
 import (
 	"encoding/json"
 	"io/ioutil"
+	"net/http"
 	"net/url"
+
+	"github.com/pkg/errors"
 
 	"github.com/hashicorp/vault/api"
 )
 
 type Client struct {
 	*api.Client
+
+	auth AuthProvider
+}
+
+type Service struct {
+	client     *Client
+	MountPoint string
+}
+
+type RequestOptions struct {
+	Parameters url.Values
+
+	// SkipRenewal defines if the client should retry this Request with a new Token if it fails because of
+	// 403 Permission Denied
+	// The default behavior of the client is to always Request a new Token on 403
+	// Only if this is explicitly set to true, the client will continue processing the first failed request
+	// and skip the renewal
+	// This should generally only be disabled for TokenAuth requests (a failed TokenAuth request can't be fixed by
+	// doing another TokenAuth request, this would lead to infinite recursion)
+	SkipRenewal bool
 }
 
 type TLSConfig struct {
@@ -53,55 +76,92 @@ func NewClient(addr string, tlsConf *TLSConfig, opts ...ClientOpts) (*Client, er
 		}
 	}
 
+	if client.auth != nil {
+		if err := client.renewToken(); err != nil {
+			return nil, err
+		}
+	}
+
 	return client, nil
 }
 
-func (c *Client) Request(method string, path []string, body interface{}, parameters url.Values, response interface{}) error {
+func (c *Client) renewToken() error {
+	res, err := c.auth.Auth()
+	if err != nil {
+		return err
+	}
+
+	c.SetToken(res.Auth.ClientToken)
+
+	return nil
+}
+
+func (c *Client) Request(method string, path []string, body, response interface{}, opts *RequestOptions) error {
+	if opts == nil {
+		opts = &RequestOptions{}
+	}
+
 	pathString := resolvePath(path)
 	r := c.NewRequest(method, pathString)
 
 	if body != nil {
 		if err := r.SetJSONBody(body); err != nil {
-			return err
+			return errors.Wrap(err, "failed to marshal body as JSON")
 		}
 	}
 
-	if parameters != nil {
-		r.Params = parameters
+	if opts.Parameters != nil {
+		r.Params = opts.Parameters
 	}
 
 	resp, err := c.RawRequest(r)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "request failed")
+	}
+
+	if resp.StatusCode == http.StatusForbidden && c.auth != nil && !opts.SkipRenewal {
+		_ = resp.Body.Close()
+
+		err = c.renewToken()
+		if err != nil {
+			return errors.Wrap(err, "token renew after request returned 403 failed")
+		}
+
+		resp, err = c.RawRequest(r)
+		if err != nil {
+			return errors.Wrap(err, "request with new token failed")
+		}
 	}
 	defer resp.Body.Close()
 
-	if response != nil {
-		respBody, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return err
-		}
+	if response == nil {
+		return nil
+	}
 
-		if err = json.Unmarshal(respBody, response); err != nil {
-			return err
-		}
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return errors.Wrap(err, "error reading response body")
+	}
+
+	if err = json.Unmarshal(respBody, response); err != nil {
+		return errors.Wrap(err, "error unmarshalling body into response struct")
 	}
 
 	return nil
 }
 
-func (c *Client) Read(path []string, parameters url.Values, response interface{}) error {
-	return c.Request("GET", path, nil, parameters, response)
+func (c *Client) Read(path []string, response interface{}, opts *RequestOptions) error {
+	return c.Request("GET", path, nil, response, opts)
 }
 
-func (c *Client) Write(path []string, body, response interface{}) error {
-	return c.Request("POST", path, body, nil, response)
+func (c *Client) Write(path []string, body, response interface{}, opts *RequestOptions) error {
+	return c.Request("POST", path, body, response, opts)
 }
 
-func (c *Client) Delete(path []string, body, response interface{}) error {
-	return c.Request("DELETE", path, body, nil, response)
+func (c *Client) Delete(path []string, body, response interface{}, opts *RequestOptions) error {
+	return c.Request("DELETE", path, body, response, opts)
 }
 
-func (c *Client) List(path []string, body, response interface{}) error {
-	return c.Request("LIST", path, body, nil, response)
+func (c *Client) List(path []string, body, response interface{}, opts *RequestOptions) error {
+	return c.Request("LIST", path, body, response, opts)
 }
