@@ -294,7 +294,7 @@ func (t *Transit) DecryptBatch(key string, opts TransitDecryptOptionsBatch) (*Tr
 
 	err := t.client.Write([]string{"v1", t.MountPoint, "decrypt", key}, opts, res, nil)
 	if err != nil {
-		return nil, err
+		return nil, t.mapError(err)
 	}
 
 	for i := range res.Data.BatchResults {
