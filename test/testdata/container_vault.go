@@ -31,6 +31,10 @@ func (v *VaultContainer) Token() string {
 	return v.token
 }
 
+func (v *VaultContainer) Terminate(ctx context.Context) error {
+	return v.container.Terminate(ctx)
+}
+
 func InitVaultContainer(ctx context.Context) (*VaultContainer, error) {
 	port := nat.Port("8200/tcp")
 	token := "test"
