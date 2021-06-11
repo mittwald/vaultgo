@@ -33,7 +33,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v1
+        uses: golangci/golangci-lint-action@v2
         with:
-          version: v1.27
-          args: --config=build/ci/.golangci.yml
+          version: v1.40.1

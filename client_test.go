@@ -2,7 +2,6 @@ package vault
 
 import (
 	"fmt"
-	"gopkg.in/guregu/null.v3"
 	"log"
 )
 
@@ -58,7 +57,7 @@ func Example_encryptDecryptType() {
 	key := "test123bacd"
 
 	err = transit.Create(key, &TransitCreateOptions{
-		Exportable: null.BoolFrom(true),
+		Exportable: BoolPtr(true),
 		Type:       rsa4096,
 	})
 	if err != nil {

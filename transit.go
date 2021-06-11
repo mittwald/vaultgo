@@ -7,7 +7,6 @@ import (
 	"net/url"
 
 	"github.com/hashicorp/vault/api"
-	"gopkg.in/guregu/null.v3"
 )
 
 type Transit struct {
@@ -28,11 +27,11 @@ func (c *Client) TransitWithMountPoint(mountPoint string) *Transit {
 }
 
 type TransitCreateOptions struct {
-	ConvergentEncryption null.Bool `json:"convergent_encryption,omitempty"`
-	Derived              null.Bool `json:"derived,omitempty"`
-	Exportable           null.Bool `json:"exportable,omitempty"`
-	AllowPlaintextBackup null.Bool `json:"allow_plaintext_backup,omitempty"`
-	Type                 string    `json:"type,omitempty"`
+	ConvergentEncryption *bool  `json:"convergent_encryption,omitempty"`
+	Derived              *bool  `json:"derived,omitempty"`
+	Exportable           *bool  `json:"exportable,omitempty"`
+	AllowPlaintextBackup *bool  `json:"allow_plaintext_backup,omitempty"`
+	Type                 string `json:"type,omitempty"`
 }
 
 func (t *Transit) Create(key string, opts *TransitCreateOptions) error {
@@ -104,7 +103,7 @@ func (t *Transit) Delete(key string) error {
 
 func (t *Transit) ForceDelete(key string) error {
 	err := t.Update(key, TransitUpdateOptions{
-		DeletionAllowed: null.BoolFrom(true),
+		DeletionAllowed: BoolPtr(true),
 	})
 	if err != nil {
 		return err
@@ -114,11 +113,11 @@ func (t *Transit) ForceDelete(key string) error {
 }
 
 type TransitUpdateOptions struct {
-	MinDecryptionVersion int       `json:"min_decrytion_version"`
-	MinEncryptionVersion int       `json:"min_encryption_version"`
-	DeletionAllowed      null.Bool `json:"deletion_allowed"`
-	Exportable           null.Bool `json:"exportable"`
-	AllowPlaintextBackup null.Bool `json:"allow_plaintext_backup"`
+	MinDecryptionVersion int   `json:"min_decrytion_version,omitempty"`
+	MinEncryptionVersion int   `json:"min_encryption_version,omitempty"`
+	DeletionAllowed      *bool `json:"deletion_allowed,omitempty"`
+	Exportable           *bool `json:"exportable,omitempty"`
+	AllowPlaintextBackup *bool `json:"allow_plaintext_backup,omitempty"`
 }
 
 func (t *Transit) Update(key string, opts TransitUpdateOptions) error {
@@ -141,7 +140,7 @@ func (t *Transit) Rotate(key string) error {
 
 type TransitExportOptions struct {
 	KeyType string `json:"key_type"`
-	Version string `json:"version"`
+	Version string `json:"version,omitempty"`
 }
 
 type TransitExportResponse struct {
@@ -184,22 +183,22 @@ func (t *Transit) KeyExists(key string) (bool, error) {
 }
 
 type TransitBatchCiphertext struct {
-	Ciphertext string      `json:"ciphertext"`
-	Context    null.String `json:"context"`
+	Ciphertext string `json:"ciphertext"`
+	Context    string `json:"context,omitempty"`
 }
 
 type TransitBatchPlaintext struct {
-	Plaintext string      `json:"plaintext"`
-	Context   null.String `json:"context"`
+	Plaintext string `json:"plaintext"`
+	Context   string `json:"context,omitempty"`
 }
 
 type TransitEncryptOptions struct {
-	Plaintext            string      `json:"plaintext"`
-	Context              null.String `json:"context"`
-	KeyVersion           null.Int    `json:"key_version"`
-	Nonce                null.String `json:"nonce"`
-	Type                 null.String `json:"type"`
-	ConvergentEncryption null.String `json:"convergent_encryption"`
+	Plaintext            string `json:"plaintext"`
+	Context              string `json:"context,omitempty"`
+	KeyVersion           *int   `json:"key_version,omitempty"`
+	Nonce                string `json:"nonce,omitempty"`
+	Type                 string `json:"type,omitempty"`
+	ConvergentEncryption string `json:"convergent_encryption,omitempty"`
 }
 
 type TransitEncryptResponse struct {
@@ -223,9 +222,9 @@ func (t *Transit) Encrypt(key string, opts *TransitEncryptOptions) (*TransitEncr
 
 type TransitEncryptOptionsBatch struct {
 	BatchInput           []TransitBatchPlaintext `json:"batch_input"`
-	KeyVersion           null.Int                `json:"key_version"`
-	Type                 null.String             `json:"type"`
-	ConvergentEncryption null.String             `json:"convergent_encryption"`
+	KeyVersion           *int                    `json:"key_version,omitempty"`
+	Type                 string                  `json:"type,omitempty"`
+	ConvergentEncryption string                  `json:"convergent_encryption,omitempty"`
 }
 
 type TransitEncryptResponseBatch struct {
@@ -250,9 +249,9 @@ func (t *Transit) EncryptBatch(key string, opts *TransitEncryptOptionsBatch) (*T
 }
 
 type TransitDecryptOptions struct {
-	Ciphertext string      `json:"ciphertext"`
-	Context    null.String `json:"context"`
-	Nonce      null.String `json:"nonce"`
+	Ciphertext string `json:"ciphertext"`
+	Context    string `json:"context,omitempty"`
+	Nonce      string `json:"nonce,omitempty"`
 }
 
 type TransitDecryptResponse struct {
