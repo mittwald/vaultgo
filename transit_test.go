@@ -10,7 +10,6 @@ import (
 
 	"github.com/hashicorp/vault/api"
 	"github.com/stretchr/testify/suite"
-	"gopkg.in/guregu/null.v3"
 )
 
 type TransitTestSuite struct {
@@ -33,7 +32,7 @@ func TestTransitTestSuite(t *testing.T) {
 
 func (s *TransitTestSuite) TestCreateAndRead() {
 	err := s.client.Create("testCreateAndRead", &TransitCreateOptions{
-		Exportable: null.BoolFrom(true),
+		Exportable: BoolPtr(true),
 	})
 	require.NoError(s.T(), err)
 
@@ -41,11 +40,12 @@ func (s *TransitTestSuite) TestCreateAndRead() {
 	require.NoError(s.T(), err)
 
 	s.Equal(true, res.Data.Exportable)
+	s.T().Log(res.Data.Type)
 }
 
 func (s *TransitTestSuite) TestCreateAndList() {
 	err := s.client.Create("testCreateAndList", &TransitCreateOptions{
-		Exportable: null.BoolFrom(true),
+		Exportable: BoolPtr(true),
 	})
 	require.NoError(s.T(), err)
 
@@ -61,7 +61,7 @@ func (s *TransitTestSuite) TestCreateAndList() {
 func (s *TransitTestSuite) TestCreateListAllowDelete() {
 	key := "testCreateListAllowDelete"
 	err := s.client.Create(key, &TransitCreateOptions{
-		Exportable: null.BoolFrom(true),
+		Exportable: BoolPtr(true),
 	})
 	require.NoError(s.T(), err)
 
@@ -70,7 +70,7 @@ func (s *TransitTestSuite) TestCreateListAllowDelete() {
 	s.Contains(res.Data.Keys, key)
 
 	err = s.client.Update(key, TransitUpdateOptions{
-		DeletionAllowed: null.BoolFrom(true),
+		DeletionAllowed: BoolPtr(true),
 	})
 	require.NoError(s.T(), err)
 
@@ -85,7 +85,7 @@ func (s *TransitTestSuite) TestCreateListAllowDelete() {
 func (s *TransitTestSuite) TestCreateListForceDelete() {
 	key := "testCreateListForceDelete"
 	err := s.client.Create(key, &TransitCreateOptions{
-		Exportable: null.BoolFrom(true),
+		Exportable: BoolPtr(true),
 	})
 	require.NoError(s.T(), err)
 
@@ -104,7 +104,7 @@ func (s *TransitTestSuite) TestCreateListForceDelete() {
 func (s *TransitTestSuite) TestRotate() {
 	key := "testRotate"
 	err := s.client.Create(key, &TransitCreateOptions{
-		Exportable: null.BoolFrom(true),
+		Exportable: BoolPtr(true),
 	})
 	require.NoError(s.T(), err)
 
@@ -122,7 +122,7 @@ func (s *TransitTestSuite) TestRotate() {
 func (s *TransitTestSuite) TestExport() {
 	key := "testExport"
 	err := s.client.Create(key, &TransitCreateOptions{
-		Exportable: null.BoolFrom(true),
+		Exportable: BoolPtr(true),
 	})
 	require.NoError(s.T(), err)
 
@@ -138,7 +138,7 @@ func (s *TransitTestSuite) TestExport() {
 
 func (s *TransitTestSuite) TestKeyExists() {
 	err := s.client.Create("testExists", &TransitCreateOptions{
-		Exportable: null.BoolFrom(true),
+		Exportable: BoolPtr(true),
 	})
 	require.NoError(s.T(), err)
 
@@ -196,6 +196,13 @@ func (s *TransitTestSuite) TestEncryptDecryptBatch() {
 
 	s.Equal(text1, dec.Data.BatchResults[0].Plaintext)
 	s.Equal(text2, dec.Data.BatchResults[1].Plaintext)
+}
+
+func (s *TransitTestSuite) TestImplicitEncryptCreate() {
+	_, err := s.client.Encrypt("test404", &TransitEncryptOptions{
+		Plaintext: "asdf",
+	})
+	require.NoError(s.T(), err)
 }
 
 func (s *TransitTestSuite) TestDecryptWithoutKey() {
