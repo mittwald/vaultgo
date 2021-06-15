@@ -122,11 +122,11 @@ func (c *Client) Request(method string, path []string, body, response interface{
 		if err != nil {
 			return errors.Wrap(err, "token renew after request returned 403 failed")
 		}
-
-		resp, err = c.RawRequest(r)
-		if err != nil {
-			return errors.Wrap(err, "request with new token failed")
-		}
+		
+		// We have to build a new request, the new token has to be set in that one
+		// Renewal has to be skipped to make sure we never renew in a loop.
+		opts.SkipRenewal = true
+		return c.Request(method, path, body, response, opts)
 	} else if err != nil {
 		return errors.Wrap(err, "request failed")
 	}
