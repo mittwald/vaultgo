@@ -127,7 +127,7 @@ func (c *Client) Request(method string, path []string, body, response interface{
 		if err != nil {
 			return errors.Wrap(err, "request with new token failed")
 		}
-	} else {
+	} else if err != nil {
 		return errors.Wrap(err, "request failed")
 	}
 	defer resp.Body.Close()
