@@ -115,11 +115,7 @@ func (c *Client) Request(method string, path []string, body, response interface{
 	}
 
 	resp, err := c.RawRequest(r)
-	if err != nil {
-		return errors.Wrap(err, "request failed")
-	}
-
-	if resp.StatusCode == http.StatusForbidden && c.auth != nil && !opts.SkipRenewal {
+	if resp != nil && resp.StatusCode == http.StatusForbidden && c.auth != nil && !opts.SkipRenewal {
 		_ = resp.Body.Close()
 
 		err = c.renewToken()
@@ -131,6 +127,8 @@ func (c *Client) Request(method string, path []string, body, response interface{
 		if err != nil {
 			return errors.Wrap(err, "request with new token failed")
 		}
+	} else {
+		return errors.Wrap(err, "request failed")
 	}
 	defer resp.Body.Close()
 
