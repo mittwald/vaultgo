@@ -40,7 +40,7 @@ func InitVaultContainer(ctx context.Context) (*VaultContainer, error) {
 	token := "test"
 
 	req := testcontainers.ContainerRequest{
-		Image:        "vault:1.6.2",
+		Image:        "vault:1.8.4",
 		ExposedPorts: []string{string(port)},
 		WaitingFor:   wait.ForListeningPort(port),
 		Env: map[string]string{
