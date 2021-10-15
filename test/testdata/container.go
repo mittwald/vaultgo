@@ -6,9 +6,9 @@ import (
 
 var Vault *VaultContainer
 
-func Init(ctx context.Context) error {
+func Init(ctx context.Context, version string) error {
 	var err error
-	Vault, err = InitVaultContainer(ctx)
+	Vault, err = InitVaultContainer(ctx, version)
 
 	return err
 }

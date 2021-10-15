@@ -3,10 +3,13 @@ package testdata
 import (
 	"context"
 	"fmt"
+
 	"github.com/docker/go-connections/nat"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 )
+
+var VaultVersions = []string{"1.6.7", "1.7.5", "1.8.4"}
 
 type VaultContainer struct {
 	container  testcontainers.Container
@@ -35,12 +38,12 @@ func (v *VaultContainer) Terminate(ctx context.Context) error {
 	return v.container.Terminate(ctx)
 }
 
-func InitVaultContainer(ctx context.Context) (*VaultContainer, error) {
+func InitVaultContainer(ctx context.Context, version string) (*VaultContainer, error) {
 	port := nat.Port("8200/tcp")
 	token := "test"
 
 	req := testcontainers.ContainerRequest{
-		Image:        "vault:1.8.4",
+		Image:        "vault:" + version,
 		ExposedPorts: []string{string(port)},
 		WaitingFor:   wait.ForListeningPort(port),
 		Env: map[string]string{

@@ -3,10 +3,11 @@ package vault
 import (
 	"context"
 	"errors"
-	"github.com/mittwald/vaultgo/test/testdata"
-	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
+
+	"github.com/mittwald/vaultgo/test/testdata"
+	"github.com/stretchr/testify/require"
 
 	"github.com/hashicorp/vault/api"
 	"github.com/stretchr/testify/suite"
@@ -18,16 +19,19 @@ type TransitTestSuite struct {
 }
 
 func TestTransitTestSuite(t *testing.T) {
-	require.NoError(t, testdata.Init(context.Background()))
+	for _, v := range testdata.VaultVersions {
+		require.NoError(t, testdata.Init(context.Background(), v))
 
-	client, _ := NewClient(testdata.Vault.URI(), WithCaPath(""))
-	client.SetToken(testdata.Vault.Token())
-	transit := client.Transit()
+		t.Logf("using vault uri %v", testdata.Vault.URI())
+		client, _ := NewClient(testdata.Vault.URI(), WithCaPath(""))
+		client.SetToken(testdata.Vault.Token())
+		transit := client.Transit()
 
-	transitTestSuite := new(TransitTestSuite)
-	transitTestSuite.client = transit
+		transitTestSuite := new(TransitTestSuite)
+		transitTestSuite.client = transit
 
-	suite.Run(t, transitTestSuite)
+		suite.Run(t, transitTestSuite)
+	}
 }
 
 func (s *TransitTestSuite) TestCreateAndRead() {
