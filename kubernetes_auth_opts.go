@@ -20,12 +20,7 @@ func WithJwt(jwt string) KubernetesAuthOpt {
 
 func WithJwtFromFile(path string) KubernetesAuthOpt {
 	return func(k *kubernetesAuth) error {
-		jwt, err := loadJwt(path)
-		if err != nil {
-			return err
-		}
-
-		k.jwt = jwt
+		k.jwtPath = path
 
 		return nil
 	}
