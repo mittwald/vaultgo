@@ -16,18 +16,11 @@ func NewKubernetesAuth(c *Client, role string, opts ...KubernetesAuthOpt) (AuthP
 		Client:     c,
 		mountPoint: "kubernetes",
 		role:       role,
+		jwtPath:    defaultServiceAccountTokenPath,
 	}
 
 	for _, opt := range opts {
 		err := opt(k)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	var err error
-	if k.jwt == "" {
-		k.jwt, err = loadJwt(defaultServiceAccountTokenPath)
 		if err != nil {
 			return nil, err
 		}
@@ -41,6 +34,7 @@ type kubernetesAuth struct {
 	mountPoint string
 	role       string
 	jwt        string
+	jwtPath    string
 }
 
 func loadJwt(path string) (string, error) {
@@ -75,14 +69,24 @@ type kubernetesAuthConfig struct {
 }
 
 func (k kubernetesAuth) Auth() (*AuthResponse, error) {
+	var err error
+
+	jwt := k.jwt
+	if jwt == "" {
+		jwt, err = loadJwt(k.jwtPath)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	conf := &kubernetesAuthConfig{
 		Role: k.role,
-		JWT:  k.jwt,
+		JWT:  jwt,
 	}
 
 	res := &AuthResponse{}
 
-	err := k.Client.Write([]string{"v1", "auth", k.mountPoint, "login"}, conf, res, &RequestOptions{
+	err = k.Client.Write([]string{"v1", "auth", k.mountPoint, "login"}, conf, res, &RequestOptions{
 		SkipRenewal: true,
 	})
 	if err != nil {
