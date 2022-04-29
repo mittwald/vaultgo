@@ -1,6 +1,7 @@
 package vault
 
 import (
+	"crypto/x509"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -14,7 +15,9 @@ import (
 type Client struct {
 	*api.Client
 
-	auth AuthProvider
+	auth    AuthProvider
+	conf    *api.Config
+	tlsConf *TLSConfig
 }
 
 type Service struct {
@@ -67,7 +70,7 @@ func NewClient(addr string, tlsConf *TLSConfig, opts ...ClientOpts) (*Client, er
 		return nil, err
 	}
 
-	client := &Client{Client: vaultClient}
+	client := &Client{Client: vaultClient, conf: conf, tlsConf: tlsConf}
 
 	for _, opt := range opts {
 		err := opt(client)
@@ -96,6 +99,10 @@ func (c *Client) renewToken() error {
 	return nil
 }
 
+func (c *Client) reloadTLSConfig() error {
+	return c.conf.ConfigureTLS(c.tlsConf.TLSConfig)
+}
+
 func (c *Client) Request(method string, path []string, body, response interface{}, opts *RequestOptions) error {
 	if opts == nil {
 		opts = &RequestOptions{}
@@ -122,9 +129,16 @@ func (c *Client) Request(method string, path []string, body, response interface{
 		if err != nil {
 			return errors.Wrap(err, "token renew after request returned 403 failed")
 		}
-		
+
 		// We have to build a new request, the new token has to be set in that one
 		// Renewal has to be skipped to make sure we never renew in a loop.
+		opts.SkipRenewal = true
+		return c.Request(method, path, body, response, opts)
+	} else if err != nil && errors.As(err, &x509.UnknownAuthorityError{}) && !opts.SkipRenewal {
+		reloadErr := c.reloadTLSConfig()
+		if reloadErr != nil {
+			return errors.Wrapf(reloadErr, "tlsconfig reload failed after request failed with %q", err.Error())
+		}
 		opts.SkipRenewal = true
 		return c.Request(method, path, body, response, opts)
 	} else if err != nil {
