@@ -122,23 +122,29 @@ func (c *Client) Request(method string, path []string, body, response interface{
 	}
 
 	resp, err := c.RawRequest(r)
-	if resp != nil && resp.StatusCode == http.StatusForbidden && c.auth != nil && !opts.SkipRenewal {
-		_ = resp.Body.Close()
+	isTokenExpiredErr := resp != nil && resp.StatusCode == http.StatusForbidden && c.auth != nil
+	isCertExpiredErr := err != nil && errors.As(err, &x509.UnknownAuthorityError{})
+	if (isTokenExpiredErr || isCertExpiredErr) && !opts.SkipRenewal {
+		if resp != nil {
+			_ = resp.Body.Close()
+		}
 
-		err = c.renewToken()
-		if err != nil {
-			return errors.Wrap(err, "token renew after request returned 403 failed")
+		if c.tlsConf != nil {
+			reloadErr := c.reloadTLSConfig()
+			if reloadErr != nil {
+				return errors.Wrapf(reloadErr, "tlsconfig reload failed after request failed with %q", err.Error())
+			}
+		}
+
+		if c.auth != nil {
+			tokenErr := c.renewToken()
+			if tokenErr != nil {
+				return errors.Wrap(tokenErr, "token renew after request returned 403 failed")
+			}
 		}
 
 		// We have to build a new request, the new token has to be set in that one
 		// Renewal has to be skipped to make sure we never renew in a loop.
-		opts.SkipRenewal = true
-		return c.Request(method, path, body, response, opts)
-	} else if err != nil && errors.As(err, &x509.UnknownAuthorityError{}) && !opts.SkipRenewal {
-		reloadErr := c.reloadTLSConfig()
-		if reloadErr != nil {
-			return errors.Wrapf(reloadErr, "tlsconfig reload failed after request failed with %q", err.Error())
-		}
 		opts.SkipRenewal = true
 		return c.Request(method, path, body, response, opts)
 	} else if err != nil {
