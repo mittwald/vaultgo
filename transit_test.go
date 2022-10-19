@@ -239,13 +239,6 @@ func (s *TransitTestSuite) TestCreateKeyThatDoesAlreadyExist() {
 	require.NoError(s.T(), err)
 }
 
-func (s *TransitTestSuite) TestImplicitSignCreate() {
-	_, err := s.client.Sign("test404", &TransitSignOptions{
-		Input: "asdf",
-	})
-	require.NoError(s.T(), err)
-}
-
 func (s *TransitTestSuite) TestSignVerify() {
 	err := s.client.Create("testSignVerify", &TransitCreateOptions{Type: "rsa-2048"})
 	require.NoError(s.T(), err)
@@ -294,13 +287,14 @@ func (s *TransitTestSuite) TestSignVerifyBatch() {
 }
 
 func (s *TransitTestSuite) TestDecodeCipherText() {
-	dec, err := DecodeCipherText("vault:v1:SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c")
+	dec, ver, err := DecodeCipherText("vault:v123:SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c")
 	require.NoError(s.T(), err)
 	s.Equal("SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c", dec)
+	s.Equal(123, ver)
 }
 
 func (s *TransitTestSuite) TestDecodeCipherTextError() {
-	_, err := DecodeCipherText("vault:SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c")
+	_, _, err := DecodeCipherText("vault:SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c")
 	s.NotNil(err)
 }
 
