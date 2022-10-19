@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"strconv"
 
 	"github.com/hashicorp/vault/api"
 )
@@ -454,14 +455,19 @@ func (t *Transit) VerifyBatch(key string, opts *TransitVerifyOptionsBatch) (*Tra
 }
 
 // DecodeCipherText gets payload from vault ciphertext format (removes "vault:v<ver>:" prefix)
-func DecodeCipherText(vaultCipherText string) (string, error) {
-	regex := regexp.MustCompile(`^vault:v\d+:(.+)$`)
+func DecodeCipherText(vaultCipherText string) (string, int, error) {
+	regex := regexp.MustCompile(`^vault:v(\d+):(.+)$`)
 	matches := regex.FindStringSubmatch(vaultCipherText)
-	if len(matches) != 2 {
-		return "", errors.New("invalid vault ciphertext format")
+	if len(matches) != 3 {
+		return "", 0, errors.New("invalid vault ciphertext format")
 	}
 
-	return matches[1], nil
+	keyVersion, err := strconv.Atoi(matches[1])
+	if err != nil {
+		return "", 0, errors.New("can't parse key version")
+	}
+
+	return matches[2], keyVersion, nil
 }
 
 // EncodeCipherText encodes payload to vault ciphertext format (adda "vault:v<ver>:" prefix)
