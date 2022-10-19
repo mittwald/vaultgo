@@ -238,3 +238,67 @@ func (s *TransitTestSuite) TestCreateKeyThatDoesAlreadyExist() {
 	err = s.client.Create("testCeateKeyThatDoesAlreadyExist", &TransitCreateOptions{})
 	require.NoError(s.T(), err)
 }
+
+func (s *TransitTestSuite) TestSignVerify() {
+	err := s.client.Create("testSignVerify", &TransitCreateOptions{Type: "rsa-2048"})
+	require.NoError(s.T(), err)
+
+	text := "test"
+
+	signRes, err := s.client.Sign("testSignVerify", &TransitSignOptions{
+		Input: text,
+	})
+	require.NoError(s.T(), err)
+
+	verifyRes, err := s.client.Verify("testSignVerify", &TransitVerifyOptions{
+		Input:     text,
+		Signature: signRes.Data.Signature,
+	})
+	require.NoError(s.T(), err)
+
+	s.True(verifyRes.Data.Valid)
+}
+
+func (s *TransitTestSuite) TestSignVerifyBatch() {
+	err := s.client.Create("testSignVerify", &TransitCreateOptions{Type: "rsa-2048"})
+	require.NoError(s.T(), err)
+
+	text1 := "test1"
+	text2 := "test2"
+
+	signRes, err := s.client.SignBatch("testSignVerify", &TransitSignOptionsBatch{
+		BatchInput: []TransitBatchSignInput{
+			{Input: text1},
+			{Input: text2},
+		},
+	})
+	require.NoError(s.T(), err)
+
+	verifyRes, err := s.client.VerifyBatch("testSignVerify", &TransitVerifyOptionsBatch{
+		BatchInput: []TransitBatchVerifyInput{
+			{Input: text1, Signature: signRes.Data.BatchResults[0].Signature},
+			{Input: text2, Signature: signRes.Data.BatchResults[1].Signature},
+		},
+	})
+	require.NoError(s.T(), err)
+
+	s.True(verifyRes.Data.BatchResults[0].Valid)
+	s.True(verifyRes.Data.BatchResults[1].Valid)
+}
+
+func (s *TransitTestSuite) TestDecodeCipherText() {
+	dec, ver, err := DecodeCipherText("vault:v123:SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c")
+	require.NoError(s.T(), err)
+	s.Equal("SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c", dec)
+	s.Equal(123, ver)
+}
+
+func (s *TransitTestSuite) TestDecodeCipherTextError() {
+	_, _, err := DecodeCipherText("vault:SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c")
+	s.NotNil(err)
+}
+
+func (s *TransitTestSuite) TestEncodeCipherText() {
+	enc := EncodeCipherText("SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c", 123)
+	s.Equal("vault:v123:SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c", enc)
+}
