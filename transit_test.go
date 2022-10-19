@@ -239,13 +239,6 @@ func (s *TransitTestSuite) TestCreateKeyThatDoesAlreadyExist() {
 	require.NoError(s.T(), err)
 }
 
-func (s *TransitTestSuite) TestImplicitSignCreate() {
-	_, err := s.client.Sign("test404", &TransitSignOptions{
-		Input: "asdf",
-	})
-	require.NoError(s.T(), err)
-}
-
 func (s *TransitTestSuite) TestSignVerify() {
 	err := s.client.Create("testSignVerify", &TransitCreateOptions{Type: "rsa-2048"})
 	require.NoError(s.T(), err)
