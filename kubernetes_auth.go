@@ -1,13 +1,13 @@
 package vault
 
 import (
-	"io/ioutil"
+	"os"
 
 	"github.com/pkg/errors"
 )
 
 const (
-	// nolint:gosec // this is not a hardcoded credential
+	//nolint:gosec // this is not a hardcoded credential
 	defaultServiceAccountTokenPath = "/run/secrets/kubernetes.io/serviceaccount/token"
 )
 
@@ -38,7 +38,7 @@ type kubernetesAuth struct {
 }
 
 func loadJwt(path string) (string, error) {
-	content, err := ioutil.ReadFile(path)
+	content, err := os.ReadFile(path)
 	if err != nil {
 		return "", errors.Wrap(err, "could not load jwt from file")
 	}
