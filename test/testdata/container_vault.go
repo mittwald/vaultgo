@@ -9,7 +9,7 @@ import (
 	"github.com/testcontainers/testcontainers-go/wait"
 )
 
-var VaultVersions = []string{"1.6.7", "1.7.5", "1.8.4", "1.9.3"}
+var VaultVersions = []string{"1.6.7", "1.7.5", "1.8.4", "1.9.3", "1.12.2"}
 
 type VaultContainer struct {
 	container  testcontainers.Container
