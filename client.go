@@ -3,7 +3,7 @@ package vault
 import (
 	"crypto/x509"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 
@@ -121,6 +121,7 @@ func (c *Client) Request(method string, path []string, body, response interface{
 		r.Params = opts.Parameters
 	}
 
+	//nolint:staticcheck
 	resp, err := c.RawRequest(r)
 	isTokenExpiredErr := resp != nil && resp.StatusCode == http.StatusForbidden && c.auth != nil
 	isCertExpiredErr := err != nil && errors.As(err, &x509.UnknownAuthorityError{})
@@ -156,7 +157,7 @@ func (c *Client) Request(method string, path []string, body, response interface{
 		return nil
 	}
 
-	respBody, err := ioutil.ReadAll(resp.Body)
+	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return errors.Wrap(err, "error reading response body")
 	}
