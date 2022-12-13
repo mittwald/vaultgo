@@ -84,7 +84,7 @@ func InitVaultContainer(ctx context.Context, version string) (*VaultContainer, e
 		return nil, err
 	}
 
-	_, err = vc.container.Exec(ctx, []string{
+	_, _, err = vc.container.Exec(ctx, []string{
 		"vault",
 		"secrets",
 		"enable",

@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	// nolint:gosec // this is not a hardcoded credential
+	//nolint:gosec // this is not a hardcoded credential
 	defaultServiceAccountTokenPath = "/run/secrets/kubernetes.io/serviceaccount/token"
 )
 
