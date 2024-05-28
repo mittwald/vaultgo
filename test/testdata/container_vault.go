@@ -9,7 +9,13 @@ import (
 	"github.com/testcontainers/testcontainers-go/wait"
 )
 
-var VaultVersions = []string{"1.6.7", "1.7.5", "1.8.4", "1.9.3", "1.12.2"}
+var VaultVersions = []string{
+	"1.6.7",
+	"1.7.5",
+	"1.8.4",
+	"1.9.3",
+	"1.12.2",
+}
 
 type VaultContainer struct {
 	container  testcontainers.Container
@@ -59,10 +65,12 @@ func InitVaultContainer(ctx context.Context, version string) (*VaultContainer, e
 		Privileged: true,
 	}
 
-	v, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
-		ContainerRequest: req,
-		Started:          true,
-	})
+	v, err := testcontainers.GenericContainer(
+		ctx, testcontainers.GenericContainerRequest{
+			ContainerRequest: req,
+			Started:          true,
+		},
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -84,12 +92,29 @@ func InitVaultContainer(ctx context.Context, version string) (*VaultContainer, e
 		return nil, err
 	}
 
-	_, _, err = vc.container.Exec(ctx, []string{
-		"vault",
-		"secrets",
-		"enable",
-		"transit",
-	})
+	// transit mount
+	_, _, err = vc.container.Exec(
+		ctx, []string{
+			"vault",
+			"secrets",
+			"enable",
+			"transit",
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// KVv1 mount
+	_, _, err = vc.container.Exec(
+		ctx, []string{
+			"vault",
+			"secrets",
+			"enable",
+			"-version=1",
+			"kv",
+		},
+	)
 	if err != nil {
 		return nil, err
 	}
