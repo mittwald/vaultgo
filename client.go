@@ -70,7 +70,11 @@ func NewClient(addr string, tlsConf *TLSConfig, opts ...ClientOpts) (*Client, er
 		return nil, err
 	}
 
-	client := &Client{Client: vaultClient, conf: conf, tlsConf: tlsConf}
+	client := &Client{
+		Client:  vaultClient,
+		conf:    conf,
+		tlsConf: tlsConf,
+	}
 
 	for _, opt := range opts {
 		err := opt(client)
@@ -183,4 +187,8 @@ func (c *Client) Delete(path []string, body, response interface{}, opts *Request
 
 func (c *Client) List(path []string, body, response interface{}, opts *RequestOptions) error {
 	return c.Request("LIST", path, body, response, opts)
+}
+
+func (c *Client) Put(path []string, body, response interface{}, opts *RequestOptions) error {
+	return c.Request("PUT", path, body, response, opts)
 }
