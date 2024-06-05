@@ -61,6 +61,29 @@ func (k *KVv1) Read(key string) (*KVv1ReadResponse, error) {
 	return readRes, nil
 }
 
+type KVv1ListResponse struct {
+	Data struct {
+		Keys []string `json:"keys"`
+	} `json:"data"`
+}
+
+func (k *KVv1) List(key string) (*KVv1ListResponse, error) {
+	listRes := &KVv1ListResponse{}
+
+	err := k.client.List(
+		[]string{
+			pathPrefix,
+			k.MountPoint,
+			url.PathEscape(key),
+		}, nil, listRes, nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return listRes, nil
+}
+
 func (k *KVv1) Delete(key string) error {
 	err := k.client.Delete(
 		[]string{

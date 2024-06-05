@@ -79,3 +79,19 @@ func (s *KVv1TestSuite) TestCreateAndDelete() {
 	_, readErr := s.client.Read("2b7ff26d-30b7-43ba-96d5-79b4baba9b39")
 	require.Error(s.T(), readErr)
 }
+
+func (s *KVv1TestSuite) TestCreateAndList() {
+	testKeyValues := make(map[string]string)
+	testKeyValues["PrivateKey"] = "abcde"
+
+	require.NoError(s.T(), s.client.Create("foo", testKeyValues))
+	require.NoError(s.T(), s.client.Create("foo2", testKeyValues))
+
+	list, listErr := s.client.List("")
+	require.NoError(s.T(), listErr)
+
+	require.Contains(s.T(), list.Data.Keys, "foo")
+	require.Contains(s.T(), list.Data.Keys, "foo2")
+	require.Len(s.T(), list.Data.Keys, 2)
+
+}
