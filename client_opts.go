@@ -21,3 +21,16 @@ func WithAuthToken(token string) ClientOpts {
 		return nil
 	}
 }
+
+func WithUserpassAuth(username string, password string, opts ...UserpassAuthOpt) ClientOpts {
+	return func(c *Client) error {
+		userpassAuthProvider, err := NewUserpassAuth(c, username, password, opts...)
+		if err != nil {
+			return err
+		}
+
+		c.auth = userpassAuthProvider
+
+		return nil
+	}
+}
