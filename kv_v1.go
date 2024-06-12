@@ -1,9 +1,5 @@
 package vault
 
-import (
-	"net/url"
-)
-
 const (
 	pathPrefix string = "v1"
 )
@@ -30,7 +26,7 @@ func (k *KVv1) Create(id string, data map[string]string) error {
 		[]string{
 			pathPrefix,
 			k.MountPoint,
-			url.PathEscape(id),
+			id,
 		}, data, nil, nil,
 	)
 	if err != nil {
@@ -51,7 +47,7 @@ func (k *KVv1) Read(key string) (*KVv1ReadResponse, error) {
 		[]string{
 			pathPrefix,
 			k.MountPoint,
-			url.PathEscape(key),
+			key,
 		}, readRes, nil,
 	)
 	if err != nil {
@@ -74,7 +70,7 @@ func (k *KVv1) List(key string) (*KVv1ListResponse, error) {
 		[]string{
 			pathPrefix,
 			k.MountPoint,
-			url.PathEscape(key),
+			key,
 		}, nil, listRes, nil,
 	)
 	if err != nil {
@@ -89,7 +85,7 @@ func (k *KVv1) Delete(key string) error {
 		[]string{
 			pathPrefix,
 			k.MountPoint,
-			url.PathEscape(key),
+			key,
 		}, nil, nil, nil,
 	)
 	if err != nil {
