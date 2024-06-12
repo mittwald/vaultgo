@@ -86,12 +86,19 @@ func (s *KVv1TestSuite) TestCreateAndList() {
 
 	require.NoError(s.T(), s.client.Create("foo", testKeyValues))
 	require.NoError(s.T(), s.client.Create("foo2", testKeyValues))
+	require.NoError(s.T(), s.client.Create("foo3/test", testKeyValues))
 
 	list, listErr := s.client.List("")
 	require.NoError(s.T(), listErr)
 
 	require.Contains(s.T(), list.Data.Keys, "foo")
 	require.Contains(s.T(), list.Data.Keys, "foo2")
-	require.Len(s.T(), list.Data.Keys, 2)
+	require.Contains(s.T(), list.Data.Keys, "foo3/")
+	require.Len(s.T(), list.Data.Keys, 3)
 
+	nestedList, nestedListErr := s.client.List("foo3")
+	require.NoError(s.T(), nestedListErr)
+
+	require.Contains(s.T(), nestedList.Data.Keys, "test")
+	require.Len(s.T(), nestedList.Data.Keys, 1)
 }
