@@ -33,6 +33,15 @@ type SSHSignResponse struct {
 	} `json:"data"`
 }
 
+type SSHReadPubKeyResponse struct {
+	LeaseID       string `json:"lease_id"`
+	Renewable     bool   `json:"renewable"`
+	LeaseDuration int    `json:"lease_duration"`
+	Data          struct {
+		PublicKey string `json:"public_key"`
+	} `json:"data"`
+}
+
 func (k *SSH) Sign(role string, sshopts SSHSignOptions) (*SSHSignResponse, error) {
 	response := &SSHSignResponse{}
 	err := k.client.Write(
@@ -48,4 +57,21 @@ func (k *SSH) Sign(role string, sshopts SSHSignOptions) (*SSHSignResponse, error
 	}
 
 	return response, nil
+}
+
+func (k *SSH) GetVaultPubKey() (string, error) {
+	response := &SSHReadPubKeyResponse{}
+	err := k.client.Read(
+		[]string{
+			"v1",
+			k.MountPoint,
+			"config",
+			"ca",
+		}, response, nil,
+	)
+	if err != nil {
+		return "", err
+	}
+
+	return response.Data.PublicKey, nil
 }
