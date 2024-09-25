@@ -8,7 +8,7 @@ import (
 
 const (
 	//nolint:gosec // this is not a hardcoded credential
-	defaultServiceAccountTokenPath = "/run/secrets/kubernetes.io/serviceaccount/token"
+	defaultServiceAccountTokenPath = "/var/run/secrets/kubernetes.io/serviceaccount/token"
 )
 
 func NewKubernetesAuth(c *Client, role string, opts ...KubernetesAuthOpt) (AuthProvider, error) {
