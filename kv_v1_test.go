@@ -78,6 +78,9 @@ func (s *KVv1TestSuite) TestCreateAndDelete() {
 
 	_, readErr := s.client.Read("2b7ff26d-30b7-43ba-96d5-79b4baba9b39")
 	require.Error(s.T(), readErr)
+
+	_, readEmptyErr := s.client.ReadEmpty("2b7ff26d-30b7-43ba-96d5-79b4baba9b39")
+	require.NoError(s.T(), readEmptyErr)
 }
 
 func (s *KVv1TestSuite) TestCreateAndList() {
