@@ -25,7 +25,7 @@ type AuthCreateTokenRequest struct {
 	NoParent        bool                   `json:"no_parent,omitempty"`
 	NoDefaultPolicy bool                   `json:"no_default_policy,omitempty"`
 	Renewable       bool                   `json:"renewable,omitempty"`
-	TTL             int                    `json:"ttl,omitempty"`
+	TTL             string                 `json:"ttl,omitempty"`
 	Type            string                 `json:"type,omitempty"`
 	EntityAlias     string                 `json:"entity_alias,omitempty"`
 }
