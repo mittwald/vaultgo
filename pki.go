@@ -295,6 +295,80 @@ func (k *PKI) RevokeIssuer(issuerName string) (*PKIRevokeIssuerResponse, error) 
 	return response, nil
 }
 
+type PKICreateRoleRequest struct {
+	IssuerRef        string   `json:"issuer_ref"`
+	TTL              string   `json:"ttl,omitempty"`
+	MaxTTL           string   `json:"max_ttl,omitempty"`
+	AllowedDomains   []string `json:"allowed_domains,omitempty"`
+	AllowBareDomain  bool     `json:"allow_bare_domain,omitempty"`
+	AllowGlobDomains bool     `json:"allow_glob_domains,omitempty"`
+	AllowWildcard    bool     `json:"allow_wildcard_certificates,omitempty"`
+	AllowSubdomains  bool     `json:"allow_subdomains,omitempty"`
+	ServerFlag       bool     `json:"server_flag,omitempty"`
+}
+
+type PKIRoleResponse struct {
+	AllowAnyName              bool     `json:"allow_any_name"`
+	AllowBareDomains          bool     `json:"allow_bare_domains"`
+	AllowGlobDomains          bool     `json:"allow_glob_domains"`
+	AllowIPSans               bool     `json:"allow_ip_sans"`
+	AllowLocalhost            bool     `json:"allow_localhost"`
+	AllowSubdomains           bool     `json:"allow_subdomains"`
+	AllowTokenDisplayname     bool     `json:"allow_token_displayname"`
+	AllowWildcardCertificates bool     `json:"allow_wildcard_certificates"`
+	AllowedDomains            []string `json:"allowed_domains"`
+	AllowedDomainsTemplate    bool     `json:"allowed_domains_template"`
+	AllowedOtherSans          []string `json:"allowed_other_sans"`
+	AllowedSerialNumbers      []string `json:"allowed_serial_numbers"`
+	AllowedURISans            []string `json:"allowed_uri_sans"`
+	AllowedURISansTemplate    bool     `json:"allowed_uri_sans_template"`
+	AllowedUserIDs            []string `json:"allowed_user_ids"`
+	EnforceHostnames          bool     `json:"enforce_hostnames"`
+	GenerateLease             bool     `json:"generate_lease"`
+	IssuerRef                 string   `json:"issuer_ref"`
+	KeyUsage                  []string `json:"key_usage"`
+	MaxTTL                    int      `json:"max_ttl"`
+	NoStore                   bool     `json:"no_store"`
+	NotAfter                  string   `json:"not_after"`
+	NotBeforeDuration         int      `json:"not_before_duration"`
+	ServerFlag                bool     `json:"server_flag"`
+	TTL                       int      `json:"ttl"`
+	UseCSRCommonName          bool     `json:"use_csr_common_name"`
+	UseCSRSans                bool     `json:"use_csr_sans"`
+}
+
+func (k *PKI) CreateOrUpdateRole(roleName string, pkiopts PKICreateRoleRequest) (*PKIRoleResponse, error) {
+	response := &PKIRoleResponse{}
+	err := k.client.Write(
+		[]string{
+			"v1",
+			k.MountPoint,
+			"roles",
+			roleName,
+		}, pkiopts, response, nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return response, nil
+}
+
+func (k *PKI) ReadRole(roleName string) (*PKIRoleResponse, error) {
+	response := &PKIRoleResponse{}
+	err := k.client.Read(
+		[]string{
+			"v1",
+			k.MountPoint,
+			"roles",
+			roleName,
+		}, response, nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return response, nil
+}
+
 func (k *PKI) mapError(err error) error {
 	resErr := &api.ResponseError{}
 	if errors.As(err, &resErr) {
