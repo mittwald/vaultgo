@@ -327,12 +327,12 @@ type PKIRoleResponse struct {
 	GenerateLease             bool     `json:"generate_lease"`
 	IssuerRef                 string   `json:"issuer_ref"`
 	KeyUsage                  []string `json:"key_usage"`
-	MaxTTL                    int      `json:"max_ttl"`
+	MaxTTL                    string   `json:"max_ttl"`
 	NoStore                   bool     `json:"no_store"`
 	NotAfter                  string   `json:"not_after"`
-	NotBeforeDuration         int      `json:"not_before_duration"`
+	NotBeforeDuration         string   `json:"not_before_duration"`
 	ServerFlag                bool     `json:"server_flag"`
-	TTL                       int      `json:"ttl"`
+	TTL                       string   `json:"ttl"`
 	UseCSRCommonName          bool     `json:"use_csr_common_name"`
 	UseCSRSans                bool     `json:"use_csr_sans"`
 }
