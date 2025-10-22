@@ -369,6 +369,44 @@ func (k *PKI) ReadRole(roleName string) (*PKIRoleResponse, error) {
 	return response, nil
 }
 
+type PKISignCSROptions struct {
+	CSR        string `json:"csr"`
+	CommonName string `json:"common_name,omitempty"`
+	AltNames   string `json:"alt_names,omitempty"`
+	TTL        string `json:"ttl,omitempty"`
+	Format     string `json:"format,omitempty"`
+	NotAfter   string `json:"not_after,omitempty"`
+}
+
+type PKISignResponse struct {
+	LeaseID string `json:"lease_id"`
+	Data    struct {
+		Expiration   int      `json:"expiration"`
+		Certificate  string   `json:"certificate"`
+		IssuingCA    string   `json:"issuing_ca"`
+		CAChain      []string `json:"ca_chain"`
+		SerialNumber string   `json:"serial_number"`
+	} `json:"data"`
+}
+
+func (k *PKI) SignCSR(name string, issuerRef string, pkiopts PKISignCSROptions) (*PKISignResponse, error) {
+	response := &PKISignResponse{}
+	path := []string{"v1", k.MountPoint}
+
+	if issuerRef == "" {
+		path = append(path, "sign", name)
+	} else {
+		path = append(path, "issuer", issuerRef, "sign", name)
+	}
+
+	err := k.client.Write(path, pkiopts, response, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return response, nil
+}
+
 func (k *PKI) mapError(err error) error {
 	resErr := &api.ResponseError{}
 	if errors.As(err, &resErr) {
