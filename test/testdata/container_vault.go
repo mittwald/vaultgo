@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/docker/go-connections/nat"
+	"github.com/moby/moby/api/types/network"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 )
@@ -19,7 +19,7 @@ var VaultVersions = []string{
 
 type VaultContainer struct {
 	container  testcontainers.Container
-	mappedPort nat.Port
+	mappedPort network.Port
 	hostIP     string
 	token      string
 }
@@ -45,15 +45,15 @@ func (v *VaultContainer) Terminate(ctx context.Context) error {
 }
 
 func InitVaultContainer(ctx context.Context, version string) (*VaultContainer, error) {
-	port := nat.Port("8200/tcp")
+	const port = "8200/tcp"
 	token := "test"
 
 	req := testcontainers.ContainerRequest{
 		Image:        "vault:" + version,
-		ExposedPorts: []string{string(port)},
+		ExposedPorts: []string{port},
 		WaitingFor:   wait.ForListeningPort(port),
 		Env: map[string]string{
-			"VAULT_ADDR":              fmt.Sprintf("http://0.0.0.0:%s", port.Port()),
+			"VAULT_ADDR":              "http://0.0.0.0:8200",
 			"VAULT_DEV_ROOT_TOKEN_ID": token,
 			"VAULT_TOKEN":             token,
 			"VAULT_LOG_LEVEL":         "trace",
@@ -76,10 +76,8 @@ func InitVaultContainer(ctx context.Context, version string) (*VaultContainer, e
 	}
 
 	vc := &VaultContainer{
-		container:  v,
-		mappedPort: "",
-		hostIP:     "",
-		token:      token,
+		container: v,
+		token:     token,
 	}
 
 	vc.hostIP, err = v.Host(ctx)

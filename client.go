@@ -155,7 +155,7 @@ func (c *Client) Request(method string, path []string, body, response interface{
 	} else if err != nil {
 		return errors.Wrap(err, "request failed")
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if response == nil {
 		return nil
